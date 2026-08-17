@@ -17,7 +17,28 @@ app.views['export'] = {
         }
 
         // 3. Bind Billing Statement Event Listeners
-        ['billing-client-select', 'billing-month-input', 'billing-hourly-rate'].forEach(id => {
+        const clientSelect = document.getElementById('billing-client-select');
+        if (clientSelect && !clientSelect.dataset.listening) {
+            clientSelect.addEventListener('change', async (e) => {
+                const clientVal = e.target.value;
+                if (clientVal) {
+                    try {
+                        const projects = await db.getAll('projects');
+                        const clientProjects = projects.filter(p => (p.client || '').trim() === clientVal.trim() && p.hourlyRate);
+                        if (clientProjects.length > 0) {
+                            const rateInput = document.getElementById('billing-hourly-rate');
+                            if (rateInput) rateInput.value = clientProjects[0].hourlyRate;
+                        }
+                    } catch (err) {
+                        console.error('Error auto-filling client hourly rate', err);
+                    }
+                }
+                app.views['export'].renderBillingStatement();
+            });
+            clientSelect.dataset.listening = 'true';
+        }
+
+        ['billing-month-input', 'billing-hourly-rate'].forEach(id => {
             const el = document.getElementById(id);
             if (el && !el.dataset.listening) {
                 el.addEventListener('change', () => app.views['export'].renderBillingStatement());
@@ -60,6 +81,10 @@ app.views['export'] = {
                 } else {
                     select.value = '';
                     btn.disabled = true;
+                }
+
+                if (window.CustomSelect) {
+                    CustomSelect.enhance(select);
                 }
             } catch (e) {
                 console.error("Error loading projects for export", e);
@@ -265,16 +290,16 @@ app.views['export'] = {
                 <!-- Summary Header -->
                 <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0, 102, 204, 0.05); border: 1px solid rgba(0, 102, 204, 0.15); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
                     <div>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary);">🏢 發款單位：<strong>${Utils.escapeHtml(client)}</strong> ｜ 📅 結算月份：<strong>${month}</strong></div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">發款單位：<strong>${Utils.escapeHtml(client)}</strong> ｜ 結算月份：<strong>${month}</strong></div>
                         <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin-top: 2px;">
-                            ⏱️ 當月累計：<span style="color: var(--accent-primary);">${totalHours.toFixed(1)} h</span>
+                            當月累計：<span style="color: var(--accent-primary);">${totalHours.toFixed(1)} h</span>
                             <span style="font-size: 0.85rem; font-weight: normal; color: var(--text-muted);">（涵蓋 ${activeProjectsList.length} 個專案）</span>
                         </div>
                     </div>
                     <div style="text-align: right;">
                         <div style="font-size: 0.8rem; color: var(--text-muted);">依時薪 $${rate}/h 計算</div>
                         <div style="font-size: 1.25rem; font-weight: 800; color: var(--success);">
-                            💵 應收總額：$${totalAmount.toLocaleString()}
+                            應收總額：$${totalAmount.toLocaleString()}
                         </div>
                     </div>
                 </div>
@@ -282,7 +307,7 @@ app.views['export'] = {
                 <!-- Timeline Entries Table -->
                 <div style="margin-bottom: 1.25rem;">
                     <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; display: flex; justify-content: space-between;">
-                        <span>📅 每日工作紀錄明細（時間軸流水帳，共 ${monthlyEntries.length} 筆）：</span>
+                        <span>每日工作紀錄明細（時間軸流水帳，共 ${monthlyEntries.length} 筆）：</span>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 6px; max-height: 380px; overflow-y: auto; padding-right: 4px;">
                         ${monthlyEntries.map(e => {
@@ -303,7 +328,7 @@ app.views['export'] = {
                 <!-- Project Subtotals Breakdown -->
                 <div style="background: var(--bg-tertiary); border-radius: var(--radius-sm); padding: 12px 16px;">
                     <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px;">
-                        📊 各專案工時小計與金額換算：
+                        各專案工時小計與金額換算：
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px;">
                         ${activeProjectsList.map(p => {

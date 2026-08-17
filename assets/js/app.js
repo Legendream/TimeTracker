@@ -45,6 +45,11 @@ const app = {
             const activeLink = document.querySelector(`.nav-link[data-view="${routeId}"]`);
             if (activeLink) activeLink.classList.add('active');
 
+            // Render any data-icon tags in the DOM
+            if (typeof Icons !== 'undefined' && typeof Icons.replace === 'function') {
+                Icons.replace();
+            }
+
             // Trigger View Load
             if (app.views[routeId] && typeof app.views[routeId].init === 'function') {
                 app.views[routeId].init();
@@ -305,6 +310,9 @@ const app = {
             await Promise.race([dbInitPromise, timeoutPromise]);
 
             app.router.init();
+            if (typeof Icons !== 'undefined' && typeof Icons.replace === 'function') {
+                Icons.replace();
+            }
             console.log('App initialized successfully');
         } catch (e) {
             console.error("Initialization failed", e);

@@ -58,6 +58,9 @@ app.views['timer'] = {
                 showClosed: true,
                 placeholder: '選擇專案...'
             });
+            if (window.CustomSelect) {
+                CustomSelect.enhance(select);
+            }
         } catch (e) {
             console.error("Error loading projects", e);
         }
@@ -103,11 +106,15 @@ app.views['timer'] = {
                     if (entry) {
                         db.get('projects', entry.projectId).then(proj => {
                             const projName = proj ? proj.name : '未知專案';
-                            const detailStr = `${projName} (原已記錄 ${entry.hours}h${entry.subItem ? ' - ' + entry.subItem : ''}${entry.description ? '：' + entry.description : ''})`;
                             const detailsEl = document.getElementById('timer-resume-entry-details');
-                            if (detailsEl) detailsEl.innerText = detailStr;
+                            if (detailsEl) {
+                                detailsEl.innerHTML = app.views['timer'].formatResumeIndicatorHtml(projName, entry);
+                            }
                             const ind = document.getElementById('timer-resume-indicator');
-                            if (ind) ind.style.display = 'inline-flex';
+                            if (ind) {
+                                ind.style.display = 'inline-flex';
+                                if (typeof Icons !== 'undefined') Icons.replace(ind);
+                            }
                         });
                     }
                 }).catch(err => console.error("Error restoring resume indicator", err));
@@ -492,7 +499,7 @@ app.views['timer'] = {
                 container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 2rem;">今日尚無紀錄，點擊上方「開始計時」以記錄第一筆工作。</p>';
                 if (capsule) {
                     capsule.innerHTML = `
-                        <span class="stat-capsule-icon">📅</span>
+                        <span class="stat-capsule-icon">${Icons.render('calendar', { size: 16 })}</span>
                         <span class="stat-capsule-label">今日已累積：</span>
                         <strong class="stat-capsule-val" style="color: var(--text-muted); font-size: 1.05rem;">0.0 h</strong>
                     `;
@@ -506,7 +513,7 @@ app.views['timer'] = {
 
             if (capsule) {
                 capsule.innerHTML = `
-                    <span class="stat-capsule-icon">📅</span>
+                    <span class="stat-capsule-icon">${Icons.render('calendar', { size: 16 })}</span>
                     <span class="stat-capsule-label">今日已累積：</span>
                     <strong class="stat-capsule-val" style="color: var(--accent-primary); font-size: 1.05rem;">${dailyTotal.toFixed(1)} h</strong>
                     <span style="color: var(--text-muted); font-size: 0.82rem; margin-left: 0.25rem;">(${todayEntries.length} 筆任務 · ${distinctProjects.size} 個專案)</span>
@@ -531,9 +538,9 @@ app.views['timer'] = {
                         <div style="font-weight: bold; color: var(--accent-primary); font-size: 1.1rem; margin-right: 0.2rem;">
                             ${e.hours}h
                         </div>
-                        <button class="btn-resume-entry-timer" data-id="${e.id}" style="border: none; background: none; cursor: pointer; padding: 5px; font-size: 1rem; transition: transform 0.2s;" title="繼續累計此項目">▶️</button>
-                        <button class="btn-edit-entry-timer" data-id="${e.id}" style="border: none; background: none; cursor: pointer; color: var(--text-muted); padding: 5px;" title="編輯">✏️</button>
-                        <button class="btn-delete-entry" data-id="${e.id}" style="border: none; background: none; cursor: pointer; color: var(--text-muted); padding: 5px;" title="刪除">🗑️</button>
+                        <button class="btn-resume-entry-timer" data-id="${e.id}" style="border: none; background: none; cursor: pointer; padding: 5px; color: var(--success); display: inline-flex; align-items: center;" title="接續累計此項目">${Icons.render('play', { size: 15 })}</button>
+                        <button class="btn-edit-entry-timer" data-id="${e.id}" style="border: none; background: none; cursor: pointer; color: var(--text-muted); padding: 5px; display: inline-flex; align-items: center;" title="編輯">${Icons.render('edit', { size: 15 })}</button>
+                        <button class="btn-delete-entry" data-id="${e.id}" style="border: none; background: none; cursor: pointer; color: var(--text-muted); padding: 5px; display: inline-flex; align-items: center;" title="刪除">${Icons.render('trash', { size: 15 })}</button>
                     </div>
                 </div>
             `).join('');
@@ -732,11 +739,15 @@ app.views['timer'] = {
             document.getElementById('timer-stop-btn').style.display = 'inline-block';
 
             // Display details in indicator
-            const detailStr = `${projectName} (原已記錄 ${entry.hours}h${entry.subItem ? ' - ' + entry.subItem : ''}${entry.description ? '：' + entry.description : ''})`;
             const detailsEl = document.getElementById('timer-resume-entry-details');
-            if (detailsEl) detailsEl.innerText = detailStr;
+            if (detailsEl) {
+                detailsEl.innerHTML = app.views['timer'].formatResumeIndicatorHtml(projectName, entry);
+            }
             const ind = document.getElementById('timer-resume-indicator');
-            if (ind) ind.style.display = 'inline-flex';
+            if (ind) {
+                ind.style.display = 'inline-flex';
+                if (typeof Icons !== 'undefined') Icons.replace(ind);
+            }
 
             // Start Ticking
             app.views['timer'].updateDisplay();
@@ -752,6 +763,20 @@ app.views['timer'] = {
             console.error("Error resuming entry", err);
             alert("載入紀錄失敗");
         }
+    },
+
+    formatResumeIndicatorHtml: (projectName, entry) => {
+        const pName = Utils.escapeHtml(projectName || '未知專案');
+        const hours = Number(entry.hours || 0).toFixed(1);
+        const sub = entry.subItem ? Utils.escapeHtml(entry.subItem) : '';
+        const desc = entry.description ? Utils.escapeHtml(entry.description) : '';
+        const extra = [sub, desc].filter(Boolean).join(' · ');
+
+        return `
+            <strong style="color: var(--text-primary); font-weight: 700;">${pName}</strong>
+            <span style="background: var(--bg-tertiary); color: var(--text-secondary); padding: 1px 6px; border-radius: 4px; font-size: 0.78rem; font-weight: 600;">已累計 ${hours}h</span>
+            ${extra ? `<span style="color: var(--text-muted); font-size: 0.8rem;">(${extra})</span>` : ''}
+        `;
     },
 
     disconnectResumeEntry: async () => {

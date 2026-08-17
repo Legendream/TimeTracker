@@ -432,6 +432,10 @@ app.views['project-details'] = {
             if (currentVal && select.querySelector(`option[value="${currentVal}"]`)) {
                 select.value = currentVal;
             }
+
+            if (window.CustomSelect) {
+                CustomSelect.enhance(select);
+            }
         } catch (e) {
             console.error("Error loading projects", e);
         }
@@ -487,10 +491,11 @@ app.views['project-details'] = {
             const lifetimeReceived = projectRevenues.reduce((sum, r) => sum + Number(r.amount || 0), 0);
             const budget = Number(project.revenue || 0);
             const unpaid = Math.max(0, budget - lifetimeReceived);
+            const hourlyRate = Number(project.hourlyRate) || Utils.DEFAULT_HOURLY_RATE;
 
-            const displayAmount = isHourly ? Math.round(totalHours * Utils.DEFAULT_HOURLY_RATE) : lifetimeReceived;
-            const displayAmountLabel = isHourly ? '💵 累計產值' : '💵 專案已收';
-            const displayRateLabel = isHourly ? '$0/h' : (totalHours > 0 && lifetimeReceived > 0 ? `$${Math.round(lifetimeReceived / totalHours).toLocaleString()}/h` : '-');
+            const displayAmount = isHourly ? Math.round(totalHours * hourlyRate) : lifetimeReceived;
+            const displayAmountLabel = isHourly ? '累計產值' : '專案已收';
+            const displayRateLabel = isHourly ? `$${hourlyRate}/h` : (totalHours > 0 && lifetimeReceived > 0 ? `$${Math.round(lifetimeReceived / totalHours).toLocaleString()}/h` : '-');
 
             const catInfo = Utils.getCategoryInfo(project.category);
             const statusInfo = Utils.getStatusInfo(project.status);
@@ -500,35 +505,37 @@ app.views['project-details'] = {
                 <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                         <span>${Utils.escapeHtml(project.name)}</span>
-                        <span class="project-client-badge">🏢 ${Utils.escapeHtml(project.client || '未指定客戶')}</span>
+                        <span class="project-client-badge">${Icons.render('building', { size: 12 })} ${Utils.escapeHtml(project.client || '未指定客戶')}</span>
                         <span style="font-size: 0.78rem; padding: 2px 8px; border-radius: 12px; background: ${billingInfo.color}15; color: ${billingInfo.color}; border: 1px solid ${billingInfo.color}35; font-weight: 600;">
-                            ${billingInfo.icon} ${isHourly ? '計時發薪 ($0/h)' : billingInfo.label}
+                            ${isHourly ? `計時發薪 ($${hourlyRate}/h)` : billingInfo.label}
                         </span>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                         <!-- Quick Category Selector -->
                         <select id="details-quick-category" style="padding: 4px 10px; font-size: 0.8rem; border-radius: 14px; background: ${catInfo.color}; color: white; border: none; font-weight: 600; cursor: pointer;" title="快速切換專案類別">
-                            <option value="commercial" ${project.category === 'commercial' ? 'selected' : ''}>💼 商業委託</option>
-                            <option value="pro_bono" ${project.category === 'pro_bono' ? 'selected' : ''}>🌱 公益奉送</option>
-                            <option value="self_study" ${project.category === 'self_study' ? 'selected' : ''}>💡 自修創作</option>
+                            <option value="commercial" ${project.category === 'commercial' ? 'selected' : ''}>商業委託</option>
+                            <option value="pro_bono" ${project.category === 'pro_bono' ? 'selected' : ''}>公益奉獻</option>
+                            <option value="self_study" ${project.category === 'self_study' ? 'selected' : ''}>自修創作</option>
                         </select>
 
                         <!-- Quick Status Selector -->
                         <select id="details-quick-status" style="padding: 4px 10px; font-size: 0.8rem; border-radius: 14px; background: ${statusInfo.bg}; color: ${statusInfo.color}; border: 1px solid ${statusInfo.color}; font-weight: 700; cursor: pointer;" title="快速切換專案生命週期狀態">
-                            <option value="bidding" ${project.status === 'bidding' ? 'selected' : ''}>💡 提案/開拓中</option>
-                            <option value="active" ${project.status === 'active' ? 'selected' : ''}>🟢 執行中</option>
-                            <option value="pending_payment" ${project.status === 'pending_payment' ? 'selected' : ''}>⏳ 待請款</option>
-                            <option value="paid" ${project.status === 'paid' ? 'selected' : ''}>✅ 已收齊</option>
-                            <option value="closed" ${project.status === 'closed' ? 'selected' : ''}>📁 已結案</option>
+                            <option value="bidding" ${project.status === 'bidding' ? 'selected' : ''}>提案/開拓中</option>
+                            <option value="active" ${project.status === 'active' ? 'selected' : ''}>執行中</option>
+                            <option value="pending_payment" ${project.status === 'pending_payment' ? 'selected' : ''}>待請款</option>
+                            <option value="paid" ${project.status === 'paid' ? 'selected' : ''}>已收齊</option>
+                            <option value="closed" ${project.status === 'closed' ? 'selected' : ''}>已結案</option>
                         </select>
 
-                        <button type="button" class="btn btn-secondary" id="details-btn-edit-full" style="padding: 4px 10px; font-size: 0.8rem;" title="編輯專案完整資訊（名稱、客戶、標籤、預算等）">✏️ 編輯專案</button>
+                        <button type="button" class="btn btn-secondary" id="details-btn-edit-full" style="padding: 4px 10px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem;" title="編輯專案完整資訊（名稱、客戶、標籤、預算等）">
+                            ${Icons.render('edit', { size: 13 })} 編輯專案
+                        </button>
                     </div>
                 </div>
 
                 <div class="project-metric-grid" style="margin-bottom: 1rem;">
                     <div class="project-metric-item">
-                        <span class="project-metric-label">⏱️ 累積工時</span>
+                        <span class="project-metric-label">累積工時</span>
                         <span class="project-metric-val">${totalHours.toFixed(1)} h</span>
                     </div>
                     <div class="project-metric-item">
@@ -536,7 +543,7 @@ app.views['project-details'] = {
                         <span class="project-metric-val" style="color: ${displayAmount > 0 ? 'var(--success)' : 'var(--text-muted)'};">$${displayAmount.toLocaleString()}</span>
                     </div>
                     <div class="project-metric-item">
-                        <span class="project-metric-label">${isHourly ? '⚡ 固定時薪' : '⚡ 實質時薪'}</span>
+                        <span class="project-metric-label">${isHourly ? '專案時薪' : '實質時薪'}</span>
                         <span class="project-metric-val" style="color: ${displayRateLabel !== '-' ? 'var(--accent-primary)' : 'var(--text-muted)'};">${displayRateLabel}</span>
                     </div>
                 </div>
@@ -557,13 +564,18 @@ app.views['project-details'] = {
                     </div>
                     <div>
                         <span style="color: var(--text-secondary);">尚欠尾款：</span>
-                        <strong style="color: ${unpaid > 0 ? '#ea580c' : 'var(--success)'};">${unpaid > 0 ? `$${unpaid.toLocaleString()}` : '✅ 已結清'}</strong>
+                        <strong style="color: ${unpaid > 0 ? '#ea580c' : 'var(--success)'};">${unpaid > 0 ? `$${unpaid.toLocaleString()}` : '已結清'}</strong>
                     </div>` : ''}
                     ${isHourly ? `
                     <div>
-                        <span style="color: var(--text-secondary);">計費說明：</span>
-                        <strong style="color: var(--accent-primary);">⏱️ 專案計時發薪（$${Utils.DEFAULT_HOURLY_RATE}/hr）</strong>
-                    </div>` : ''}
+                        <span style="color: var(--text-secondary);">計費模式：</span>
+                        <strong style="color: var(--accent-primary);">專案計時發薪（$${hourlyRate}/hr）</strong>
+                    </div>
+                    ${budget > 0 ? `
+                    <div>
+                        <span style="color: var(--text-secondary);">預算上限：</span>
+                        <strong>$${budget.toLocaleString()}</strong>
+                    </div>` : ''}` : ''}
                 </div>
             `;
 
@@ -578,24 +590,24 @@ app.views['project-details'] = {
             if (manualPillsContainer) {
                 let pills = [];
                 if (project.subItems && project.subItems.length > 0) {
-                    pills = project.subItems.map(s => ({ label: `🏷️ ${s}`, value: s, isCustom: true }));
+                    pills = project.subItems.map(s => ({ label: s, value: s, isCustom: true }));
                 } else {
                     const used = new Set();
                     projectEntries.forEach(e => {
                         if (e.subItem && e.subItem.trim()) used.add(e.subItem.trim());
                     });
                     if (used.size > 0) {
-                        pills = Array.from(used).map(s => ({ label: `🏷️ ${s}`, value: s, isCustom: true }));
+                        pills = Array.from(used).map(s => ({ label: s, value: s, isCustom: true }));
                     }
                 }
 
                 if (pills.length === 0) {
                     pills = [
-                        { label: '🔍 研究', value: '研究' },
-                        { label: '🎤 訪談', value: '訪談' },
-                        { label: '✍️ 寫作', value: '寫作' },
-                        { label: '💼 PM', value: 'PM' },
-                        { label: '👥 會議', value: '會議' }
+                        { label: '研究', value: '研究' },
+                        { label: '訪談', value: '訪談' },
+                        { label: '寫作', value: '寫作' },
+                        { label: 'PM', value: 'PM' },
+                        { label: '會議', value: '會議' }
                     ];
                 }
 
@@ -1154,8 +1166,8 @@ app.views['project-details'] = {
                         <strong>${e.date}</strong>
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <span style="color: var(--accent-primary); font-weight: bold;">${e.hours}h</span>
-                            <button class="btn-edit-entry" data-id="${e.id}" style="border: none; background: none; cursor: pointer; font-size: 0.9rem; padding: 2px;" title="編輯">✏️</button>
-                            <button class="btn-delete-entry" data-id="${e.id}" style="border: none; background: none; cursor: pointer; font-size: 0.9rem; padding: 2px;" title="刪除">🗑️</button>
+                            <button class="btn-edit-entry" data-id="${e.id}" style="border: none; background: none; cursor: pointer; color: var(--text-muted); padding: 2px; display: inline-flex; align-items: center;" title="編輯">${Icons.render('edit', { size: 14 })}</button>
+                            <button class="btn-delete-entry" data-id="${e.id}" style="border: none; background: none; cursor: pointer; color: var(--text-muted); padding: 2px; display: inline-flex; align-items: center;" title="刪除">${Icons.render('trash', { size: 14 })}</button>
                         </div>
                     </div>
                     <div style="color: var(--text-secondary); font-size: 0.9rem; display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">

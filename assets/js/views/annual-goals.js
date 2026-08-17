@@ -589,6 +589,10 @@ app.views['annual-goals'] = {
         if (currentVal && select.querySelector(`option[value="${currentVal}"]`)) {
             select.value = currentVal;
         }
+
+        if (window.CustomSelect) {
+            CustomSelect.enhance(select);
+        }
     },
 
     populateOrgDatalist: (allRevenue) => {
@@ -658,7 +662,8 @@ app.views['annual-goals'] = {
                 ${orgList.map((org, index) => {
                     const rank = index + 1;
                     const rankClass = rank === 1 ? 'top-1' : (rank === 2 ? 'top-2' : (rank === 3 ? 'top-3' : ''));
-                    const rankIcon = rank === 1 ? '🥇 主要第一大客戶' : (rank === 2 ? '🥈 第二大客戶' : (rank === 3 ? '🥉 第三大客戶' : `#${rank}`));
+                    const rankIcon = rank === 1 ? '主要第一大客戶' : (rank === 2 ? '第二大客戶' : (rank === 3 ? '第三大客戶' : `#${rank}`));
+                    const rankBadgePrefix = rank <= 3 ? Icons.render('award', { size: 13 }) + ' ' : '';
                     const shareOfTotal = totalRevenue > 0 ? ((org.total / totalRevenue) * 100).toFixed(1) : '0.0';
                     const shareOfGoal = goalAmount > 0 ? ((org.total / goalAmount) * 100).toFixed(1) : null;
                     const barWidth = Math.max(4, Math.round((org.total / maxOrgTotal) * 100));
@@ -670,7 +675,7 @@ app.views['annual-goals'] = {
                         <div class="org-rank-card ${isActive ? 'active' : ''}" data-org="${org.name}">
                             <div class="org-rank-header">
                                 <div class="org-rank-name-wrap">
-                                    <span class="rank-badge ${rankClass}" style="width: auto; padding: 2px 8px; border-radius: 12px;">${rankIcon}</span>
+                                    <span class="rank-badge ${rankClass}" style="width: auto; padding: 2px 8px; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.25rem;">${rankBadgePrefix}${rankIcon}</span>
                                     <span class="org-rank-name" title="${org.name}" style="font-size: 1.1rem; font-weight: 700;">${org.name}</span>
                                     ${isActive ? '<span style="font-size: 0.75rem; background: var(--accent-primary); color: #fff; padding: 2px 6px; border-radius: 4px;">檢視中</span>' : ''}
                                 </div>
@@ -688,7 +693,7 @@ app.views['annual-goals'] = {
                             ${projectNames.length > 0 ? `
                                 <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed rgba(0,0,0,0.06);">
                                     <span style="font-size: 0.75rem; color: var(--text-muted);">關聯專案:</span>
-                                    ${projectNames.map(p => `<span class="cashflow-project-tag" style="margin: 0;">📁 ${p}</span>`).join('')}
+                                    ${projectNames.map(p => `<span class="cashflow-project-tag" style="margin: 0;">${Icons.render('folder', { size: 11 })} ${p}</span>`).join('')}
                                 </div>
                             ` : ''}
                         </div>
@@ -757,37 +762,37 @@ app.views['annual-goals'] = {
 
             if (p.status === 'closed') {
                 actionStatus = 'CLOSED';
-                statusBadge = '📁 已結案';
+                statusBadge = '<span class="status-indicator-dot status-closed"></span>已結案';
                 statusClass = 'unpaid';
                 priorityRank = 5;
             } else if (category === 'pro_bono' || category === 'self_study') {
                 actionStatus = 'PRO_BONO_STUDY';
-                statusBadge = category === 'pro_bono' ? '🌱 公益專案' : '💡 進修與創作';
+                statusBadge = category === 'pro_bono' ? '<span class="status-indicator-dot status-paid"></span>公益專案' : '<span class="status-indicator-dot status-bidding"></span>進修與創作';
                 statusClass = 'pro-bono-badge';
                 priorityRank = 4;
             } else if (category === 'bd') {
                 actionStatus = 'BD';
-                statusBadge = p.status === 'bidding' ? '💡 提案申請中' : '🎯 案源開拓';
+                statusBadge = p.status === 'bidding' ? '<span class="status-indicator-dot status-bidding"></span>提案申請中' : '<span class="status-indicator-dot status-bidding"></span>案源開拓';
                 statusClass = 'pending-balance';
                 priorityRank = 3;
             } else if (budget > 0 && unpaid > 0) {
                 actionStatus = 'PENDING';
-                statusBadge = `🚨 尚欠尾款 $${unpaid.toLocaleString()}`;
+                statusBadge = `<span class="status-indicator-dot status-pending"></span>尚欠尾款 $${unpaid.toLocaleString()}`;
                 statusClass = 'pending-balance';
                 priorityRank = 1;
             } else if (budget === 0 && lifetimeReceived === 0 && hours > 0) {
                 actionStatus = 'PENDING';
-                statusBadge = '⏳ 待請款 / 尚未入帳';
+                statusBadge = '<span class="status-indicator-dot status-pending"></span>待請款 / 尚未入帳';
                 statusClass = 'pending-balance';
                 priorityRank = 1;
             } else if (budget > 0 && lifetimeReceived >= budget) {
                 actionStatus = 'PAID';
-                statusBadge = '✅ 尾款已收齊';
+                statusBadge = '<span class="status-indicator-dot status-active"></span>尾款已收齊';
                 statusClass = 'paid-full';
                 priorityRank = 4;
             } else {
                 actionStatus = 'ACTIVE';
-                statusBadge = lifetimeReceived > 0 ? `🟢 執行中 (已收 $${lifetimeReceived.toLocaleString()})` : '🟢 執行中';
+                statusBadge = lifetimeReceived > 0 ? `<span class="status-indicator-dot status-active"></span>執行中 (已收 $${lifetimeReceived.toLocaleString()})` : '<span class="status-indicator-dot status-active"></span>執行中';
                 statusClass = 'paid-full';
                 priorityRank = 2;
             }
@@ -852,9 +857,9 @@ app.views['annual-goals'] = {
                         <div>
                             <div class="project-balance-name">${item.project.name}</div>
                             <div style="display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; margin-top: 2px;">
-                                <span class="project-client-badge">🏢 ${item.client}</span>
-                                <span style="font-size: 0.75rem; background: rgba(0,0,0,0.05); color: ${item.catInfo.color}; padding: 2px 6px; border-radius: 4px; font-weight: 600;">${item.catInfo.icon} ${item.catInfo.label}</span>
-                                ${item.isMultiYear ? `<span class="cashflow-project-tag" style="background: #e0e7ff; color: #3730a3; margin: 0;">📅 跨年度 (${item.revenueYears.join('-')})</span>` : ''}
+                                <span class="project-client-badge">${Icons.render('building', { size: 12 })} ${item.client}</span>
+                                <span style="font-size: 0.75rem; background: rgba(0,0,0,0.05); color: ${item.catInfo.color}; padding: 2px 6px; border-radius: 4px; font-weight: 600;">${item.catInfo.label}</span>
+                                ${item.isMultiYear ? `<span class="cashflow-project-tag" style="background: #e0e7ff; color: #3730a3; margin: 0;">${Icons.render('calendar', { size: 11 })} 跨年度 (${item.revenueYears.join('-')})</span>` : ''}
                             </div>
                         </div>
                         <span class="payment-status-badge ${item.statusClass}">${item.statusBadge}</span>
@@ -863,22 +868,22 @@ app.views['annual-goals'] = {
                     <!-- 3-Column Metric Box: Hours, Lifetime Received, Hourly Rate -->
                     <div class="project-metric-grid">
                         <div class="project-metric-item">
-                            <span class="project-metric-label">⏱️ 累積工時</span>
+                            <span class="project-metric-label">累積工時</span>
                             <span class="project-metric-val">${item.hours.toFixed(1)} h</span>
                         </div>
                         <div class="project-metric-item">
-                            <span class="project-metric-label">${item.actionStatus === 'PRO_BONO_STUDY' ? '🌱 專案收入' : '💵 專案總入帳'}</span>
+                            <span class="project-metric-label">${item.actionStatus === 'PRO_BONO_STUDY' ? '專案收入' : '專案總入帳'}</span>
                             <span class="project-metric-val" style="color: ${item.lifetimeReceived > 0 ? 'var(--success)' : 'var(--text-muted)'};">$${item.lifetimeReceived.toLocaleString()}</span>
                         </div>
                         <div class="project-metric-item">
-                            <span class="project-metric-label">⚡ 實質時薪</span>
+                            <span class="project-metric-label">實質時薪</span>
                             <span class="project-metric-val" style="color: ${item.hourlyRate > 0 ? 'var(--accent-primary)' : 'var(--text-muted)'};">${item.hourlyRate > 0 ? `$${item.hourlyRate.toLocaleString()}/h` : '-'}</span>
                         </div>
                     </div>
 
                     ${item.actionStatus === 'PRO_BONO_STUDY' ? `
                         <div style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.75rem; background: var(--bg-primary); padding: 6px 10px; border-radius: 4px;">
-                            ${item.catInfo.icon} 純工時投入，無合約款項或尾款追蹤
+                            純工時投入，無合約款項或尾款追蹤
                         </div>
                     ` : (item.budget > 0 ? `
                         <div class="project-balance-numbers">
@@ -897,8 +902,8 @@ app.views['annual-goals'] = {
                         </div>
 
                         <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem; flex-wrap: wrap;">
-                            <span>${item.unpaid > 0 ? `尚欠尾款: <strong style="color: #ea580c;">$${item.unpaid.toLocaleString()}</strong>` : '✅ 全額已收齊結清'}</span>
-                            <span>${item.isMultiYear ? `今年度實收: $${item.thisYearReceived.toLocaleString()}` : (item.project.status === 'closed' ? '📁 專案已結案' : '🟢 進行中')}</span>
+                            <span>${item.unpaid > 0 ? `尚欠尾款: <strong style="color: #ea580c;">$${item.unpaid.toLocaleString()}</strong>` : '全額已收齊結清'}</span>
+                            <span>${item.isMultiYear ? `今年度實收: $${item.thisYearReceived.toLocaleString()}` : (item.project.status === 'closed' ? '專案已結案' : '進行中')}</span>
                         </div>
                     ` : `
                         <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
@@ -910,13 +915,13 @@ app.views['annual-goals'] = {
                 <div>
                     ${item.revenues.length > 0 ? `
                         <button type="button" class="project-balance-tx-toggle btn-toggle-tx" data-pid="${item.project.id}">
-                            <span>📄 查看全期收款紀錄 (${item.revenues.length} 筆${item.isMultiYear ? ` · 跨 ${item.revenueYears.join('與')} 年` : ''})</span>
+                            <span>查看全期收款紀錄 (${item.revenues.length} 筆${item.isMultiYear ? ` · 跨 ${item.revenueYears.join('與')} 年` : ''})</span>
                             <span>▾</span>
                         </button>
                         <div class="project-balance-tx-list" id="project-tx-list-${item.project.id}" style="display: none;">
                             ${item.revenues.map(r => `
                                 <div class="project-tx-item">
-                                    <span>📅 <strong>${r.date}</strong> · ${r.item || '款項'}</span>
+                                    <span><strong>${r.date}</strong> · ${r.item || '款項'}</span>
                                     <strong style="color: var(--success);">+$${Number(r.amount).toLocaleString()}</strong>
                                 </div>
                             `).join('')}
@@ -925,8 +930,8 @@ app.views['annual-goals'] = {
                         <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">尚未有入帳明細紀錄</div>
                     `}
 
-                    <button type="button" class="btn btn-secondary btn-quick-add-project-revenue" style="width: 100%; margin-top: 0.75rem; padding: 6px 12px; font-size: 0.85rem;" data-pid="${item.project.id}" data-pname="${item.project.name}" data-client="${item.client}">
-                        ➕ 登記此專案入帳 / 尾款
+                    <button type="button" class="btn btn-secondary btn-quick-add-project-revenue" style="width: 100%; margin-top: 0.75rem; padding: 6px 12px; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;" data-pid="${item.project.id}" data-pname="${item.project.name}" data-client="${item.client}">
+                        ${Icons.render('plus', { size: 13 })} 登記此專案入帳 / 尾款
                     </button>
                 </div>
             </div>
@@ -1072,7 +1077,7 @@ app.views['annual-goals'] = {
             banner.innerHTML = `
                 <div class="org-banner-header">
                     <div class="org-banner-title">
-                        <span style="font-size: 1.6rem;">🏢</span>
+                        <span style="font-size: 1.6rem; display: inline-flex; align-items: center; color: var(--accent-primary);">${Icons.render('building', { size: 24 })}</span>
                         <div>
                             <h4 style="margin-bottom: 0; font-size: 1.2rem; color: var(--text-primary); font-weight: 700;">
                                 ${singleOrg}
@@ -1081,8 +1086,8 @@ app.views['annual-goals'] = {
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <button type="button" class="btn btn-secondary btn-quick-add-for-org" style="padding: 6px 12px; font-size: 0.85rem;" data-org="${singleOrg}">
-                            ➕ 登記此客戶收入
+                        <button type="button" class="btn btn-secondary btn-quick-add-for-org" style="padding: 6px 12px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.35rem;" data-org="${singleOrg}">
+                            ${Icons.render('plus', { size: 13 })} 登記此客戶收入
                         </button>
                         <button type="button" class="btn btn-secondary btn-clear-drilldown" style="padding: 6px 12px; font-size: 0.85rem;">
                             ✕ 查看全部
@@ -1162,7 +1167,7 @@ app.views['annual-goals'] = {
                         <div class="cashflow-details">
                             <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 2px;">
                                 <span class="cashflow-org-tag" title="點擊切換為此單位">${r.organization}</span>
-                                ${matchedP ? `<span class="cashflow-project-tag" title="關聯專案">📁 ${matchedP.name}</span>` : ''}
+                                ${matchedP ? `<span class="cashflow-project-tag" title="關聯專案">${Icons.render('folder', { size: 11 })} ${matchedP.name}</span>` : ''}
                             </div>
                             <div class="cashflow-item-name" title="${r.item || ''}">${r.item || '(未填寫項目)'}</div>
                         </div>
@@ -1170,8 +1175,8 @@ app.views['annual-goals'] = {
                     <div class="cashflow-right">
                         <div class="cashflow-amount">+$${Number(r.amount || 0).toLocaleString()}</div>
                         <div class="cashflow-actions">
-                            <button class="btn-icon-action btn-edit-revenue" data-id="${r.id}" title="編輯此筆金流">✏️</button>
-                            <button class="btn-icon-action btn-delete-revenue" data-id="${r.id}" title="刪除此筆金流">🗑️</button>
+                            <button class="btn-icon-action btn-edit-revenue" data-id="${r.id}" title="編輯此筆金流" style="display: inline-flex; align-items: center; justify-content: center;">${Icons.render('edit', { size: 14 })}</button>
+                            <button class="btn-icon-action btn-delete-revenue" data-id="${r.id}" title="刪除此筆金流" style="display: inline-flex; align-items: center; justify-content: center;">${Icons.render('trash', { size: 14 })}</button>
                         </div>
                     </div>
                 </div>
