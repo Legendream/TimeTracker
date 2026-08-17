@@ -140,6 +140,15 @@ app.views['dashboard'] = {
             catSelect.dataset.listening = 'true';
         }
 
+        // Project Billing Type toggle in modal
+        const projBillingSelect = document.getElementById('proj-billing-type');
+        if (projBillingSelect && !projBillingSelect.dataset.listening) {
+            projBillingSelect.addEventListener('change', () => {
+                app.views['dashboard'].syncBillingFormUI();
+            });
+            projBillingSelect.dataset.listening = 'true';
+        }
+
         // 8. Event Delegation for Project List Card Actions
         const list = document.getElementById('projects-list');
         if (list && !list.dataset.listening) {
@@ -200,6 +209,21 @@ app.views['dashboard'] = {
         }
     },
 
+    syncBillingFormUI: () => {
+        const billingSelect = document.getElementById('proj-billing-type');
+        const rateGroup = document.getElementById('proj-hourly-rate-group');
+        const revLabel = document.getElementById('proj-revenue-label');
+        if (!billingSelect) return;
+
+        const isHourly = billingSelect.value === 'hourly';
+        if (rateGroup) {
+            rateGroup.style.display = isHourly ? 'block' : 'none';
+        }
+        if (revLabel) {
+            revLabel.innerText = isHourly ? '預算/合約上限 (元)' : '合約總額 (元)';
+        }
+    },
+
     openCreateModal: () => {
         app.views['dashboard'].editingId = null;
         const modal = document.getElementById('create-project-modal');
@@ -208,9 +232,9 @@ app.views['dashboard'] = {
         const submitBtn = document.getElementById('btn-submit-project-modal');
 
         if (form) form.reset();
-        if (titleEl) titleEl.innerText = '✨ 建立新專案';
+        if (titleEl) titleEl.innerText = '建立新專案';
         if (submitBtn) {
-            submitBtn.innerHTML = '<span>+</span> 建立專案';
+            submitBtn.innerHTML = `<span>+</span> 建立專案`;
             submitBtn.style.backgroundColor = '';
         }
 
@@ -228,6 +252,11 @@ app.views['dashboard'] = {
 
         const billingSelect = document.getElementById('proj-billing-type');
         if (billingSelect) billingSelect.value = 'hourly';
+
+        const rateInput = document.getElementById('proj-hourly-rate');
+        if (rateInput) rateInput.value = Utils.DEFAULT_HOURLY_RATE;
+
+        app.views['dashboard'].syncBillingFormUI();
 
         if (document.getElementById('proj-subitems')) {
             document.getElementById('proj-subitems').value = '';
@@ -603,6 +632,9 @@ app.views['dashboard'] = {
         const category = document.getElementById('proj-category') ? document.getElementById('proj-category').value : 'commercial';
         const status = document.getElementById('proj-status') ? document.getElementById('proj-status').value : 'active';
         const billingType = document.getElementById('proj-billing-type') ? document.getElementById('proj-billing-type').value : 'hourly';
+        const hourlyRateStr = document.getElementById('proj-hourly-rate') ? document.getElementById('proj-hourly-rate').value : '';
+        const hourlyRate = hourlyRateStr !== '' && !isNaN(Number(hourlyRateStr)) ? Number(hourlyRateStr) : Utils.DEFAULT_HOURLY_RATE;
+
         const types = Array.from(document.querySelectorAll('input[name="proj-type"]:checked'))
             .map(cb => cb.value);
 
@@ -620,6 +652,7 @@ app.views['dashboard'] = {
             name,
             client: client || '未指定客戶',
             revenue: revenueStr ? Number(revenueStr) : 0,
+            hourlyRate,
             category,
             status,
             billingType,
@@ -629,19 +662,26 @@ app.views['dashboard'] = {
         };
 
         try {
+            let savedPid = null;
             if (app.views['dashboard'].editingId) {
                 const pid = app.views['dashboard'].editingId;
+                savedPid = pid;
                 const existing = await db.get('projects', pid);
                 projectData.id = pid;
                 projectData.createdAt = existing ? existing.createdAt : new Date().toISOString();
                 await db.put('projects', projectData);
             } else {
-                await db.add('projects', projectData);
+                savedPid = await db.add('projects', projectData);
             }
 
             app.views['dashboard'].closeModal();
             await app.views['dashboard'].populateClientsDatalist();
             await app.views['dashboard'].renderProjects();
+
+            // If user is currently in project details view for this project, reload details
+            if (savedPid && app.views['project-details'] && app.views['project-details'].currentProjectId === savedPid) {
+                await app.views['project-details'].loadProjectDetails(savedPid);
+            }
         } catch (err) {
             console.error('Error saving project:', err);
             alert('儲存失敗');
@@ -674,9 +714,14 @@ app.views['dashboard'] = {
             if (document.getElementById('proj-billing-type')) {
                 document.getElementById('proj-billing-type').value = project.billingType || 'hourly';
             }
+            if (document.getElementById('proj-hourly-rate')) {
+                document.getElementById('proj-hourly-rate').value = project.hourlyRate || Utils.DEFAULT_HOURLY_RATE;
+            }
             if (document.getElementById('proj-subitems')) {
                 document.getElementById('proj-subitems').value = (project.subItems || []).join(', ');
             }
+
+            app.views['dashboard'].syncBillingFormUI();
 
             document.querySelectorAll('input[name="proj-type"]').forEach(cb => cb.checked = false);
             if (project.types) {
@@ -687,7 +732,7 @@ app.views['dashboard'] = {
             }
 
             const titleEl = document.getElementById('project-modal-title');
-            if (titleEl) titleEl.innerText = `✏️ 編輯專案：${project.name}`;
+            if (titleEl) titleEl.innerText = `編輯專案：${project.name}`;
 
             const submitBtn = document.getElementById('btn-submit-project-modal');
             if (submitBtn) {
@@ -840,15 +885,16 @@ app.views['dashboard'] = {
                 const hours = hoursMap[p.id] || 0;
                 const isHourly = p.billingType === 'hourly';
                 const isFixed = p.billingType === 'fixed';
+                const rate = Number(p.hourlyRate) || Utils.DEFAULT_HOURLY_RATE;
                 
-                // For hourly projects, estimated value is hours * 750
-                const hourlyVal = Math.round(hours * Utils.DEFAULT_HOURLY_RATE);
+                // For hourly projects, estimated value is hours * hourlyRate
+                const hourlyVal = Math.round(hours * rate);
                 const actualReceived = revMap[p.id] || 0;
 
                 const displayAmount = isHourly ? hourlyVal : actualReceived;
                 const displayAmountLabel = isHourly ? '預估產值' : '已入帳';
-                const displayRate = isHourly ? Utils.DEFAULT_HOURLY_RATE : (hours > 0 && actualReceived > 0 ? Math.round(actualReceived / hours) : 0);
-                const displayRateLabel = isHourly ? '$750/h' : (displayRate > 0 ? `$${displayRate.toLocaleString()}/h` : '-');
+                const displayRate = isHourly ? rate : (hours > 0 && actualReceived > 0 ? Math.round(actualReceived / hours) : 0);
+                const displayRateLabel = isHourly ? `$${rate}/h` : (displayRate > 0 ? `$${displayRate.toLocaleString()}/h` : '-');
 
                 const budget = Number(p.revenue || 0);
                 const category = p.category || 'commercial';
@@ -860,6 +906,7 @@ app.views['dashboard'] = {
                 return {
                     project: p,
                     hours,
+                    hourlyRate: rate,
                     displayAmount,
                     displayAmountLabel,
                     displayRate,
@@ -967,7 +1014,7 @@ app.views['dashboard'] = {
                      <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
                          <span style="background: ${item.catInfo.color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;">${item.catInfo.label}</span>
                          <span style="background: ${item.statusInfo.bg}; color: ${item.statusInfo.color}; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 700;"><span class="status-indicator-dot" style="background-color: ${item.statusInfo.color};"></span>${item.statusInfo.label}</span>
-                         <span style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;">${item.isHourly ? '計時 ($750/h)' : '固定金額'}</span>
+                         <span style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;">${item.isHourly ? `計時 ($${item.hourlyRate}/h)` : '固定金額'}</span>
                          ${(p.types || []).map(t => `<span style="background: rgba(0, 102, 204, 0.08); color: var(--accent-primary); padding: 2px 6px; border-radius: 8px; font-size: 0.72rem;">${t}</span>`).join('')}
                      </div>
                  </div>

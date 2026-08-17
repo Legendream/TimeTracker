@@ -347,7 +347,8 @@ const Utils = {
         const makeOption = (p, showClientPrefix = false) => {
             const cleanName = cleanProjectDisplayName(p.name, p.client);
             const clientStr = (showClientPrefix && p.client) ? `[${p.client}] ` : '';
-            const billingBadge = p.billingType === 'fixed' ? ' 💼 (固定)' : ` ⏱️ ($${Utils.DEFAULT_HOURLY_RATE}/h)`;
+            const rate = Number(p.hourlyRate) || Utils.DEFAULT_HOURLY_RATE;
+            const billingBadge = p.billingType === 'fixed' ? ' (固定)' : ` ($${rate}/h)`;
             const closedSuffix = p.status === 'closed' ? ' [已結案]' : '';
             return `<option value="${p.id}">&nbsp;&nbsp;↳ ${Utils.escapeHtml(clientStr + cleanName + billingBadge + closedSuffix)}</option>`;
         };
@@ -398,10 +399,11 @@ const Utils = {
 
         const isHourly = project.billingType === 'hourly';
         const isFixed = project.billingType === 'fixed';
+        const rate = Number(project.hourlyRate) || defaultRate;
 
-        const estimatedValue = isHourly ? Math.round(hours * defaultRate) : totalReceived;
+        const estimatedValue = isHourly ? Math.round(hours * rate) : totalReceived;
         const unpaid = isFixed ? Math.max(0, budget - totalReceived) : 0;
-        const effectiveRate = hours > 0 && totalReceived > 0 ? Math.round(totalReceived / hours) : (isHourly ? defaultRate : 0);
+        const effectiveRate = hours > 0 && totalReceived > 0 ? Math.round(totalReceived / hours) : (isHourly ? rate : 0);
         const progress = budget > 0 ? Math.min(100, Math.round((totalReceived / budget) * 100)) : (totalReceived > 0 ? 100 : 0);
 
         return {
