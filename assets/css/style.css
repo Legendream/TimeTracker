@@ -1,0 +1,122 @@
+@import 'variables.css';
+@import 'animations.css';
+@import 'components.css';
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* Layout */
+.app-container {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 100vh;
+    align-items: start;
+}
+
+aside.sidebar {
+    background-color: var(--bg-secondary);
+    padding: var(--space-lg) var(--space-md);
+    border-right: 1px solid rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+}
+
+.brand {
+    padding: 0 var(--space-xs);
+    margin-bottom: var(--space-md);
+}
+
+main.content {
+    padding: var(--space-xl);
+    overflow-y: auto;
+    position: relative;
+    min-width: 0;
+}
+
+/* Navigation */
+.nav-menu {
+    list-style: none;
+    margin-top: var(--space-xs);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.nav-item {
+    margin-bottom: 0;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.92rem;
+    transition: var(--transition-fast);
+    cursor: pointer;
+}
+
+.nav-link:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--text-primary);
+    transform: translateX(3px);
+}
+
+.nav-link.active {
+    background-color: var(--accent-primary);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.25);
+}
+
+/* View Sections */
+.view-section {
+    display: none;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: var(--transition-normal);
+}
+
+.view-section.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+    animation: fadeInSlideUp 0.4s forwards;
+}
+
+/* Typography */
+h1,
+h2,
+h3 {
+    margin-bottom: var(--space-md);
+    font-weight: 700;
+}
+
+section h2 {
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--accent-primary);
+    display: inline-block;
+    padding-bottom: var(--space-xs);
+    margin-bottom: var(--space-md);
+}

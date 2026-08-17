@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkTime | Pro</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS -->
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <h2 style="color: var(--text-primary); letter-spacing: -1px; font-weight: 800; font-size: 1.5rem;">
+                    專案工時追蹤</h2>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#timer" class="nav-link" data-view="timer">
+                        <span>⏱️</span> 當日計時
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#dashboard" class="nav-link" data-view="dashboard">
+                        <span>📁</span> 專案管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#annual-goals" class="nav-link" data-view="annual-goals">
+                        <span>💰</span> 財務營收
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#export" class="nav-link" data-view="export">
+                        <span>📤</span> 匯出報表
+                    </a>
+                </li>
+            </ul>
+
+            <div class="user-profile">
+                <!-- User profile placeholder -->
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+
+
+            <!-- Dashboard View -->
+            <section id="dashboard-view" class="view-section">
+                <!-- Header with Action Buttons -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                        <h2 style="margin-bottom: 0.2rem;">專案儀表板</h2>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0;">一覽所有專案進度、工時投入與狀態管理</p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: nowrap; flex-shrink: 0;">
+                        <select id="annual-chart-year" style="padding: 7px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-size: 0.88rem; background: var(--bg-card); cursor: pointer; flex-shrink: 0; width: auto;">
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026" selected>2026</option>
+                            <option value="2027">2027</option>
+                        </select>
+                        <button type="button" class="btn btn-secondary" id="btn-toggle-annual-chart" style="font-size: 0.88rem; padding: 7px 14px; display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap; flex-shrink: 0;">
+                            <span>📈</span> 每月工時趨勢 <span id="chart-toggle-arrow">▾</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="btn-toggle-universal-benchmark" style="font-size: 0.88rem; padding: 7px 14px; display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap; flex-shrink: 0;">
+                            <span>🌐</span> 全站性質基準 <span id="benchmark-toggle-arrow">▾</span>
+                        </button>
+                        <button type="button" class="btn btn-primary" id="btn-open-create-project-modal" style="font-size: 0.88rem; padding: 7px 16px; display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap; flex-shrink: 0;">
+                            <span>➕</span> 建立新專案
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 1. Interactive Pipeline Filter Bar (Status Tabs + Quick Stats 2-in-1) -->
+                <div class="dashboard-pipeline-bar" id="dashboard-pipeline-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                    <div class="pipeline-tabs" id="dashboard-pipeline-tabs" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <!-- Injected by JS: 🟢 執行中 (11), 💡 提案/開拓中 (2), 🚨 待請款 (3), 📁 歷史結案 (4), 🌐 全部 (20) -->
+                    </div>
+                    <div id="dashboard-total-hours-capsule" style="font-size: 0.85rem; font-weight: 600; color: var(--accent-primary); background: rgba(0, 102, 204, 0.08); border: 1px solid rgba(0, 102, 204, 0.2); padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                        ⏱️ 累積總工時 <span id="dashboard-total-hours-val">0.0 h</span>
+                    </div>
+                </div>
+
+                <!-- Collapsible Universal Benchmark Area -->
+                <div class="card" id="universal-benchmark-collapse" style="display: none; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-primary);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            <h3 style="margin-bottom: 0.2rem; font-size: 1.15rem;">🌐 全站工作型態基準庫 (Universal Benchmark)</h3>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0;">跨專案自動統整歷史 462 筆工作性質與耗時分佈，作為未來所有新案提案的精準估時基礎</p>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="btn-open-taxonomy-settings" style="padding: 5px 12px; font-size: 0.82rem;">
+                            ⚙️ 自訂型態字典
+                        </button>
+                    </div>
+                    <div id="universal-benchmark-container">
+                        <p style="color: var(--text-muted);">載入中...</p>
+                    </div>
+                </div>
+
+                <!-- Collapsible Annual Chart Area -->
+                <div class="card" id="annual-chart-collapse" style="display: none; margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <h3 style="margin-bottom: 0; font-size: 1.05rem;">📊 年度每月工時投入概況</h3>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">單位：小時 (h)</span>
+                    </div>
+                    <div id="annual-chart-container" style="height: 180px; display: flex; align-items: flex-end; justify-content: space-between; gap: 2%; padding-top: 1rem; border-bottom: 1px solid var(--border-color);">
+                        <!-- Bars injected by JS -->
+                    </div>
+                    <div style="display: flex; justify-content: center; gap: 1.25rem; margin-top: 0.85rem; font-size: 0.82rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="display: inline-block; width: 10px; height: 10px; background: #2563eb; border-radius: 2px;"></span> 💼 商業委託</div>
+                        <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="display: inline-block; width: 10px; height: 10px; background: #16a34a; border-radius: 2px;"></span> 🌱 公益奉獻</div>
+                        <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="display: inline-block; width: 10px; height: 10px; background: #7c3aed; border-radius: 2px;"></span> 💡 自修創作</div>
+                    </div>
+                </div>
+
+                <!-- 2. Compact Search & Secondary Category Filter Toolbar -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem; background: var(--bg-card); padding: 8px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 200px; max-width: 380px;">
+                        <span style="font-size: 0.9rem; color: var(--text-muted);">🔍</span>
+                        <input type="text" id="dashboard-search-input" placeholder="搜尋專案名稱或客戶..." style="width: 100%; border: none; background: transparent; padding: 4px; font-size: 0.88rem; outline: none; color: var(--text-primary);">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <label for="dashboard-category-select" style="font-size: 0.82rem; color: var(--text-secondary); white-space: nowrap; margin-bottom: 0;">類別過濾：</label>
+                            <select id="dashboard-category-select" style="padding: 4px 10px; font-size: 0.82rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-primary); cursor: pointer;">
+                                <option value="ALL">全部類別</option>
+                                <option value="commercial">💼 商業委託</option>
+                                <option value="pro_bono">🌱 公益奉獻</option>
+                                <option value="self_study">💡 自修創作</option>
+                            </select>
+                        </div>
+                        <div id="dashboard-projects-count-badge" style="font-size: 0.8rem; color: var(--text-muted); padding-left: 0.5rem; border-left: 1px solid var(--border-color);">
+                            共 0 個專案
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projects List Grid (Directly visible upon entering!) -->
+                <div id="projects-list" class="grid-2">
+                    <!-- Projects will be injected here -->
+                </div>
+            </section>
+
+            <!-- Project Details View (Project Workspace & Estimation Hub) -->
+            <section id="project-details-view" class="view-section">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                        <button type="button" class="btn btn-secondary" id="btn-back-to-projects" style="padding: 6px 12px; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                            ← 返回專案總覽
+                        </button>
+                        <h2 style="margin-bottom: 0;">專案工作區與工時結構</h2>
+                    </div>
+                </div>
+
+                <!-- 1. Top Selector (Hidden when drilled down from dashboard, but selectable) -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <label for="project-details-select" style="font-weight: bold; margin-bottom: 0;">切換專案工作區</label>
+                        <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer; margin-bottom: 0;">
+                            <input type="checkbox" id="details-show-archived" style="width: auto; margin: 0;"> 包含已結案歷史專案
+                        </label>
+                    </div>
+                    <select id="project-details-select"
+                        style="width: 100%; padding: 0.6rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-tertiary); font-size: 0.95rem;">
+                        <option value="">請選擇專案...</option>
+                    </select>
+                </div>
+
+                <!-- Container for Project Specific Content (Hidden until selected) -->
+                <div id="project-content-container" style="display: none;">
+
+                    <div class="grid-2" style="margin-bottom: 1.5rem;">
+                        <!-- 2. Project Info Card -->
+                        <div class="card" style="border-left: 4px solid var(--accent-primary);">
+                            <h3 style="margin-bottom: 0.75rem; font-size: 1.15rem;">📌 專案概況與財務指標</h3>
+                            <div id="project-info-display">
+                                <!-- JS Injected Info -->
+                            </div>
+                        </div>
+
+                        <!-- 3. Manual Entry Card -->
+                        <div class="card" style="border-left: 4px solid var(--success);">
+                            <h3 style="margin-bottom: 0.75rem; font-size: 1.15rem;">📝 補登此專案工時</h3>
+                            <form id="manual-entry-form">
+                                <div class="form-group">
+                                    <label>日期</label>
+                                    <input type="date" id="manual-date" required>
+                                </div>
+                                <div class="grid-2">
+                                    <div class="form-group" style="grid-column: span 2;">
+                                        <label>時數</label>
+                                        <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+                                            <input type="number" id="manual-hours-part" min="0" placeholder="時" style="flex: 1; padding: 0.5rem;" required>
+                                            <span style="white-space: nowrap;">小時</span>
+                                            <input type="number" id="manual-minutes-part" min="0" max="59" placeholder="分" style="flex: 1; padding: 0.5rem;" required>
+                                            <span style="white-space: nowrap;">分鐘</span>
+                                        </div>
+                                        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                                            <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;" onclick="app.adjustFormTime('manual', 15)">+15分</button>
+                                            <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;" onclick="app.adjustFormTime('manual', 30)">+30分</button>
+                                            <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;" onclick="app.adjustFormTime('manual', 60)">+1h</button>
+                                            <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;" onclick="app.adjustFormTime('manual', -15)">-15分</button>
+                                            <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;" onclick="app.adjustFormTime('manual', -30)">-30分</button>
+                                            <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;" onclick="app.adjustFormTime('manual', -60)">-1h</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>描述</label>
+                                        <input type="text" id="manual-desc" placeholder="例如：訪談利害關係人...">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>子項目 / 任務型態</label>
+                                        <input type="text" id="manual-subitem" list="subitems-datalist" placeholder="選擇或輸入任務型態...">
+                                        <div id="manual-subitem-pills-container" style="display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.4rem;"></div>
+                                    </div>
+                                    <div class="form-group" style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-left: 0.5rem;">
+                                            <input type="checkbox" id="manual-is-billed" style="width: auto; margin: 0;"> 已請款
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">新增紀錄</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- 🌟 4. WBS Task Breakdown & Proposal Estimation Benchmark -->
+                    <div class="card" id="project-wbs-card" style="margin-bottom: 1.5rem; border-left: 4px solid #7c3aed;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                            <div>
+                                <h3 style="margin-bottom: 0.2rem; font-size: 1.15rem;">📊 專案工時結構與任務復盤 (WBS)</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0;">自動統整此專案工作階段與任務比例，隨時復盤工時分配並作為未來報價依據</p>
+                            </div>
+                            <!-- WBS View Mode Toggle -->
+                            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                                <div style="display: flex; gap: 0.35rem; background: var(--bg-tertiary); padding: 3px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);" id="wbs-mode-toggle-group">
+                                    <button type="button" class="btn btn-secondary" id="btn-wbs-mode-raw" style="padding: 5px 12px; font-size: 0.82rem; border: none; background: var(--accent-primary); color: white;" data-mode="raw" title="依據此專案定義的自訂工作階段/子項目進行精確統計">
+                                        📋 專案工作階段
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" id="btn-wbs-mode-smart" style="padding: 5px 12px; font-size: 0.82rem; border: none; background: transparent; color: var(--text-secondary);" data-mode="smart" title="根據此專案紀錄描述，自動智能聚類最常出現的任務主題">
+                                        💡 描述動態主題
+                                    </button>
+                                </div>
+                                <button type="button" class="btn btn-secondary" id="btn-batch-reclassify-subitems" style="padding: 5px 10px; font-size: 0.82rem;" title="將散落的舊標籤或未分類紀錄，一次性批量合併為統一的子項目">
+                                    🏷️ 批次整理子項目
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="btn-quick-edit-project-subitems" style="padding: 5px 10px; font-size: 0.82rem;" title="快速設定此專案的自訂子項目">
+                                    ⚙️ 設定子項目
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Injected WBS Breakdown (Visual Bars + Table) -->
+                        <div id="project-wbs-container">
+                            <p style="color: var(--text-muted);">載入中...</p>
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 2rem 0 1rem;">進階管理</h3>
+                    <div class="grid-2">
+                        <!-- 5. History List (Moved inside grid) -->
+                        <div id="project-imported-entries">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h3>工時紀錄</h3>
+                            </div>
+                            
+                            <!-- 篩選與統計 -->
+                            <div class="card" style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-tertiary);">
+                                <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label style="font-size: 0.8rem;">開始日期</label>
+                                        <input type="date" id="filter-start-date" style="padding: 0.3rem;">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label style="font-size: 0.8rem;">結束日期</label>
+                                        <input type="date" id="filter-end-date" style="padding: 0.3rem;">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+                                        <label style="font-size: 0.8rem;">子項目/描述</label>
+                                        <select id="filter-subitem" style="padding: 0.3rem; width: 100%;">
+                                            <option value="">全部</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="imported-entries-list" class="card"
+                                style="color: var(--text-secondary); text-align: center; padding: 2rem; max-height: 300px; overflow-y: auto;">
+                                請選擇專案以查看資料
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+
+
+            <!-- Timer View -->
+            <section id="timer-view" class="view-section">
+                <!-- Header with Title & Today's Summary -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                        <h2 style="margin-bottom: 0.2rem;">當日計時</h2>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0;">專注今日工作打卡、即時任務記錄與接續計時</p>
+                    </div>
+                    <!-- Today Summary Capsule -->
+                    <div id="today-productivity-capsule" class="stat-capsule" style="background: var(--bg-card); font-size: 0.9rem; padding: 8px 16px;">
+                        <span class="stat-capsule-icon">📅</span>
+                        <span class="stat-capsule-label">今日已累積：</span>
+                        <strong class="stat-capsule-val" id="today-total-hours" style="color: var(--accent-primary); font-size: 1.1rem;">0.0 h</strong>
+                    </div>
+                </div>
+
+                <div class="card" style="text-align: center; padding: 3rem 2rem; margin-bottom: 2rem;">
+                    <!-- Resume Timer Indicator -->
+                    <div id="timer-resume-indicator" style="display: none; margin-bottom: 1.5rem; padding: 0.6rem 1.2rem; background-color: rgba(0, 102, 204, 0.08); border: 1px solid rgba(0, 102, 204, 0.2); border-radius: var(--radius-full); font-size: 0.9rem; color: var(--accent-primary); align-items: center; justify-content: center; gap: 0.5rem; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.4;">
+                        <span>🔗</span> 正在累加至現有紀錄：<span id="timer-resume-entry-details" style="font-weight: 600;">...</span>
+                        <button type="button" id="timer-resume-cancel-link-btn" style="border: none; background: none; color: var(--danger); cursor: pointer; font-size: 0.85rem; font-weight: bold; text-decoration: underline; padding: 0; margin-left: 0.5rem;" title="不覆寫此紀錄，改為新增獨立紀錄（時間將自動扣除原紀錄時數）">改為獨立計時</button>
+                    </div>
+                    <div id="timer-display"
+                        style="font-size: 4.8rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-bottom: 1rem; letter-spacing: -1px; color: var(--text-primary);">
+                        00:00:00
+                    </div>
+                    <div style="margin-bottom: 1.25rem; max-width: 420px; margin-left: auto; margin-right: auto;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <select id="timer-project-select" style="font-size: 1rem; padding: 8px 12px;">
+                                <option value="">選擇專案...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: center;">
+                        <button type="button" id="timer-start-btn" class="btn btn-primary"
+                            style="min-width: 150px; background-color: var(--success); font-size: 1rem;">▶ 開始計時</button>
+                        <button type="button" id="timer-pause-btn" class="btn btn-secondary"
+                            style="min-width: 150px; display: none;">⏸ 暫停計時</button>
+                        <button type="button" id="timer-resume-btn" class="btn btn-primary"
+                            style="min-width: 150px; background-color: var(--success); display: none;">▶ 繼續計時</button>
+                        <button type="button" id="timer-stop-btn" class="btn btn-primary"
+                            style="min-width: 150px; background-color: var(--danger); display: none;">⏹ 停止並儲存</button>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin-bottom: 0; font-size: 1.15rem;">📋 今日工時明細與時間軸</h3>
+                    <span style="font-size: 0.82rem; color: var(--text-muted);">可點擊 🔗 接續計時或 ✏️ 快速微調</span>
+                </div>
+                <div id="today-entries-list">
+                    <!-- Entries list injected by JS -->
+                </div>
+            </section>
+
+            <!-- Annual Goals View -->
+            <section id="annual-goals-view" class="view-section">
+                <!-- View Header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h2 style="margin-bottom: 0.25rem;">年度目標與營收金流追蹤</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 0;">追蹤主要客戶收入貢獻、各專案入帳進度與尾款收齊狀態</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <select id="annual-goals-year-select"
+                            style="font-size: 1.1rem; padding: 0.4rem 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-tertiary);">
+                            <!-- Options injected by JS -->
+                        </select>
+                        <button id="btn-refresh-goals" class="btn btn-secondary"
+                            style="padding: 6px 12px; font-size: 1.1rem;" title="重新整理數據">🔄</button>
+                    </div>
+                </div>
+
+                <!-- KPI Overview Cards -->
+                <div class="grid-4" style="margin-bottom: 1.5rem;">
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background: rgba(0, 102, 204, 0.1); color: var(--accent-primary);">🎯</div>
+                        <div class="kpi-content">
+                            <div class="kpi-label">年度目標金額</div>
+                            <div id="kpi-goal-amount" class="kpi-value">$0</div>
+                            <div id="kpi-goal-gap-sub" class="kpi-subtext">尚差 $0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">💵</div>
+                        <div class="kpi-content">
+                            <div class="kpi-label">累計總收入</div>
+                            <div id="kpi-total-revenue" class="kpi-value" style="color: var(--success);">$0</div>
+                            <div id="kpi-progress-sub" class="kpi-subtext">達成率 0%</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background: rgba(147, 51, 234, 0.1); color: #9333ea;">👑</div>
+                        <div class="kpi-content">
+                            <div class="kpi-label">主要第一大客戶</div>
+                            <div id="kpi-top-org-name" class="kpi-value" style="font-size: 1.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</div>
+                            <div id="kpi-top-org-amount" class="kpi-subtext" style="color: var(--accent-primary); font-weight: 600;">$0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">📁</div>
+                        <div class="kpi-content">
+                            <div class="kpi-label">專案尾款追蹤</div>
+                            <div id="kpi-project-settled-count" class="kpi-value">0 <span style="font-size: 0.9rem; font-weight: normal; color: var(--text-secondary);">個已結清</span></div>
+                            <div id="kpi-project-unpaid-sub" class="kpi-subtext">尚欠尾款 $0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upper Section: Goal Setting & Add Revenue Form -->
+                <div class="grid-2" style="margin-bottom: 1.5rem;">
+                    <!-- 1. Goal Setting & Progress Bar -->
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="margin-bottom: 0;">🎯 目標設定與進度</h3>
+                        </div>
+
+                        <div id="goal-progress-container"
+                            style="text-align: center; padding: 1.25rem; background: var(--bg-tertiary); border-radius: var(--radius-sm); border: 1px solid rgba(0,0,0,0.05); margin-bottom: 1.25rem;">
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">年度達成進度</div>
+                            <div id="progress-percentage"
+                                style="font-size: 2.8rem; font-weight: 800; color: var(--accent-primary); line-height: 1.1; margin-bottom: 0.5rem;">
+                                0%
+                            </div>
+
+                            <div style="font-size: 1rem; margin-bottom: 0.5rem;">
+                                累計 <span id="current-total" style="color: var(--success); font-weight: bold;">$0</span>
+                                / 目標 <span id="goal-total" style="color: var(--text-primary); font-weight: bold;">$0</span>
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--text-muted);">
+                                距離目標還差: <span id="goal-gap" style="color: var(--danger); font-weight: bold;">$0</span>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div style="width: 100%; height: 10px; background: rgba(0,0,0,0.06); border-radius: 5px; margin-top: 1rem; overflow: hidden;">
+                                <div id="goal-progress-bar"
+                                    style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-secondary), var(--success)); transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
+                                </div>
+                            </div>
+
+                            <!-- 🌟 Capacity & Proposal Strategy Insights -->
+                            <div id="capacity-strategy-box" style="margin-top: 1rem; padding: 0.85rem 1rem; background: rgba(0, 102, 204, 0.05); border-radius: var(--radius-sm); border: 1px solid rgba(0, 102, 204, 0.15); font-size: 0.85rem; text-align: left;">
+                                <div style="font-weight: 700; color: var(--accent-primary); margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.35rem;">
+                                    <span>💡</span> 年度產能與接案策略換算
+                                </div>
+                                <div id="capacity-strategy-content" style="color: var(--text-secondary); line-height: 1.5;">
+                                    載入中...
+                                </div>
+                            </div>
+                        </div>
+
+                        <form id="annual-goal-form">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="font-weight: 500;">設定 / 調整年度目標金額 (元)</label>
+                                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                                    <input type="number" id="annual-goal-input" placeholder="例如：1000000" min="0"
+                                        style="font-size: 1.05rem; flex: 1;">
+                                    <button type="submit" id="save-goal-btn" class="btn btn-primary" style="white-space: nowrap; padding: 10px 18px;">儲存目標</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 2. Revenue Entry (With Project Association & Monthly Salary Split) -->
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <h3 id="revenue-form-title" style="margin-bottom: 0;">✍️ 登記收入 / 專案期款與月薪結算</h3>
+                            <!-- Mode Switcher -->
+                            <div style="display: flex; background: var(--bg-primary); padding: 3px; border-radius: 20px; border: 1px solid var(--border-color);">
+                                <button type="button" id="btn-revenue-mode-single" class="btn-stage-pill" style="border: none; border-radius: 16px; background: var(--accent-primary); color: #fff; font-size: 0.8rem; padding: 4px 12px;">📌 一般 / 單一專案</button>
+                                <button type="button" id="btn-revenue-mode-split" class="btn-stage-pill" style="border: none; border-radius: 16px; background: transparent; color: var(--text-secondary); font-size: 0.8rem; padding: 4px 12px;">🏢 客戶月薪一鍵自動拆帳</button>
+                            </div>
+                        </div>
+                        <p id="revenue-form-desc" style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                            可關聯專案以追蹤尾款入帳，或登記一般/額外收入
+                        </p>
+
+                        <!-- Single / General Revenue Form -->
+                        <form id="manual-revenue-form">
+                            <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 0.75rem;">
+                                <div class="form-group">
+                                    <label>收款日期</label>
+                                    <input type="date" id="revenue-date" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>關聯專案 (可自動帶入)</label>
+                                    <select id="revenue-project-select" style="font-size: 0.95rem;">
+                                        <option value="">(無關聯專案 / 一般收入)</option>
+                                        <!-- Options injected by JS -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                <div class="form-group">
+                                    <label>發款單位 / 客戶組織</label>
+                                    <input type="text" id="revenue-org" list="org-suggestions" placeholder="例如：委託客戶、合作單位、機構法人..." required autocomplete="off">
+                                    <datalist id="org-suggestions"></datalist>
+                                </div>
+                                <div class="form-group">
+                                    <label>專案／委託／款項項目</label>
+                                    <input type="text" id="revenue-item" placeholder="例如：第1期款、尾款、演講" required>
+                                </div>
+                            </div>
+
+                            <!-- Quick Payment Stage Pills -->
+                            <div style="margin-bottom: 0.75rem;">
+                                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">快速填入款項階段：</span>
+                                <div class="quick-stage-pills" id="revenue-stage-pills" style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                                    <button type="button" class="btn-stage-pill" data-stage="第1期款">🚩 訂金/第1期</button>
+                                    <button type="button" class="btn-stage-pill" data-stage="期中款">⚡ 期中款</button>
+                                    <button type="button" class="btn-stage-pill" data-stage="尾款">🎯 尾款</button>
+                                    <button type="button" class="btn-stage-pill" data-stage="薪資">💼 常態月薪</button>
+                                    <button type="button" class="btn-stage-pill" data-stage="演講/勞務">🎤 演講/勞務</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label>入帳金額 (元)</label>
+                                <input type="number" id="revenue-amount" min="0" placeholder="例如：50000" required>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button type="submit" class="btn btn-primary" style="flex: 1;" id="revenue-submit-btn">新增入帳紀錄</button>
+                                <button type="button" class="btn btn-secondary" id="cancel-revenue-edit" style="display: none;">取消編輯</button>
+                            </div>
+                        </form>
+
+                        <!-- Client Monthly Salary Auto-Split Form (Hidden by default) -->
+                        <form id="salary-split-form" style="display: none;">
+                            <div style="background: rgba(0, 102, 204, 0.05); border: 1px solid rgba(0, 102, 204, 0.15); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-primary);">
+                                💡 <strong>自動拆帳機制</strong>：輸入客戶與結算月份後，系統會自動搜尋該客戶所有<strong>「計時專案」</strong>在該月份的實際工時比例，將整筆月薪一秒自動拆算分攤至各專案！
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                <div class="form-group">
+                                    <label>發款客戶組織</label>
+                                    <select id="split-client-select" required style="font-size: 0.95rem;">
+                                        <!-- Populated via JS -->
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>結算月份</label>
+                                    <input type="month" id="split-month-select" required>
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                <div class="form-group">
+                                    <label>入帳收款日期</label>
+                                    <input type="date" id="split-revenue-date" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>收到總月薪 (元)</label>
+                                    <input type="number" id="split-total-amount" min="1" placeholder="例如：45000" required>
+                                </div>
+                            </div>
+
+                            <!-- Live Split Preview Box -->
+                            <div id="salary-split-preview" style="margin-bottom: 1.25rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px 12px; background: var(--bg-primary); display: none;">
+                                <!-- Live breakdown injected by JS -->
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" style="width: 100%;" id="btn-submit-salary-split">⚡ 一鍵自動拆帳並入帳</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs for 3 Views -->
+                <div class="view-tabs" id="annual-views-tab-bar">
+                    <button type="button" class="view-tab-btn active" data-tab="clients">
+                        <span>👑</span> 主要客戶營收排行
+                    </button>
+                    <button type="button" class="view-tab-btn" data-tab="projects">
+                        <span>📊</span> 專案入帳與尾款追蹤
+                    </button>
+                    <button type="button" class="view-tab-btn" data-tab="stream">
+                        <span>💸</span> 全部金流流水明細
+                    </button>
+                </div>
+
+                <!-- Tab 1: Major Clients Section -->
+                <div id="tab-clients-section" class="tab-pane">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <div>
+                                <h3 style="margin-bottom: 0.2rem;">🏢 主要客戶營收貢獻排行榜</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0;">掌握今年主要收入來源客戶，點擊客戶可直接查看其專案與金流明細</p>
+                            </div>
+                            <div id="org-rank-summary-badge" style="font-size: 0.85rem; color: var(--text-muted); background: var(--bg-primary); padding: 4px 10px; border-radius: var(--radius-full);">
+                                共 0 個發款單位
+                            </div>
+                        </div>
+
+                        <!-- Ranking bars container -->
+                        <div id="org-ranking-chart">
+                            <p style="text-align: center; color: var(--text-muted); padding: 2rem 0;">載入中...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Project Balance & Final Payment Tracker Section -->
+                <div id="tab-projects-section" class="tab-pane" style="display: none;">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+                            <div>
+                                <h3 style="margin-bottom: 0.2rem;">📁 專案入帳進度與尾款收齊狀態</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0;">即時比對合約金額與實際入帳，掌握各專案是否已收到完整尾款</p>
+                            </div>
+                            <!-- Action-Driven Status Filter Chips -->
+                            <div class="chip-container" id="project-status-filter-chips">
+                                <button type="button" class="filter-chip active" data-pfilter="ALL">全部專案</button>
+                                <button type="button" class="filter-chip" data-pfilter="PENDING">🚨 待請款 / 尚欠尾款</button>
+                                <button type="button" class="filter-chip" data-pfilter="ACTIVE">🟢 執行中</button>
+                                <button type="button" class="filter-chip" data-pfilter="BD">🎯 案源開拓</button>
+                                <button type="button" class="filter-chip" data-pfilter="PRO_BONO_STUDY">🌱 公益與進修</button>
+                                <button type="button" class="filter-chip" data-pfilter="CLOSED">📁 歷史結案</button>
+                            </div>
+                        </div>
+
+                        <!-- Project Cards Grid -->
+                        <div id="project-balance-cards-container" class="project-balance-grid">
+                            <p style="text-align: center; color: var(--text-muted); padding: 2rem 0;">載入中...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Detailed Cash Flow Stream & Drilldown -->
+                <div id="tab-stream-section" class="tab-pane" style="display: none;">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+                            <div>
+                                <h3 style="margin-bottom: 0.2rem;">💰 金流流水明細檢視</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0;">逐筆查看各單位的收款紀錄、金額與時間軸</p>
+                            </div>
+                            <!-- Search Box -->
+                            <div style="position: relative; min-width: 240px;">
+                                <input type="text" id="cashflow-search-input" placeholder="🔍 搜尋單位、專案或項目..."
+                                    style="padding: 8px 12px; font-size: 0.9rem; border-radius: var(--radius-full);">
+                            </div>
+                        </div>
+
+                        <!-- Filter Chips (All Units / Unit A / Unit B ...) -->
+                        <div style="margin-bottom: 1.25rem;">
+                            <div class="chip-container" id="org-filter-chips">
+                                <!-- Injected by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Selected Unit Drilldown Banner (Shown when a unit is active) -->
+                        <div id="org-drilldown-banner" style="display: none;">
+                            <!-- Injected by JS -->
+                        </div>
+
+                        <!-- Cash Flow Transactions List -->
+                        <div id="manual-revenue-list" class="cashflow-list">
+                            <p style="text-align: center; color: var(--text-muted); padding: 2rem 0;">尚無金流紀錄</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Export View -->
+            <section id="export-view" class="view-section">
+                <div style="margin-bottom: 1.5rem;">
+                    <h2 style="margin-bottom: 0.25rem;">📋 月度請款對帳與資料匯出</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 0;">一鍵產出按時間軸排版之客戶月度工作對帳單、一鍵複製請款文字，或匯出 CSV 檔案</p>
+                </div>
+
+                <!-- 1. Primary Feature: Client Monthly Billing & Timeline Statement -->
+                <div class="card" style="margin-bottom: 1.75rem; border-top: 4px solid var(--accent-primary);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                        <div>
+                            <h3 style="margin-bottom: 0.2rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.4rem;">
+                                <span>🏢</span> 客戶月度工時對帳與請款中心
+                            </h3>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0;">
+                                自動彙整選定月份該客戶之全部專案工時，依照<strong>時間軸流水帳</strong>排序產出工作紀錄
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-secondary" id="btn-copy-billing-text" style="font-size: 0.85rem; padding: 6px 14px; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                <span>📋</span> 一鍵複製請款文字
+                            </button>
+                            <button type="button" class="btn btn-primary" id="btn-quick-record-monthly-revenue" style="font-size: 0.85rem; padding: 6px 14px; display: inline-flex; align-items: center; gap: 0.35rem; background: var(--success); border-color: var(--success);">
+                                <span>✅</span> 登記本月薪資入帳
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Controls -->
+                    <div class="grid-3" style="gap: 1rem; margin-bottom: 1.25rem; background: var(--bg-tertiary); padding: 1rem; border-radius: var(--radius-md); align-items: flex-end;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="billing-client-select" style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem;">發款客戶 / 單位</label>
+                            <select id="billing-client-select" style="padding: 0.55rem; font-size: 0.95rem; width: 100%;">
+                                <option value="">載入客戶清單中...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="billing-month-input" style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem;">結算月份 (年-月)</label>
+                            <input type="month" id="billing-month-input" style="padding: 0.5rem; font-size: 0.95rem; width: 100%;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="billing-hourly-rate" style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem;">時薪標準 ($/hr)</label>
+                            <input type="number" id="billing-hourly-rate" value="0" min="0" step="50" style="padding: 0.5rem; font-size: 0.95rem; width: 100%;">
+                        </div>
+                    </div>
+
+                    <!-- Billing Statement Live Output -->
+                    <div id="billing-statement-container" style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+                        <p style="color: var(--text-muted); text-align: center; padding: 1.5rem 0;">請選擇發款客戶與月份以載入對帳單據</p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <h3 style="font-size: 1.05rem; color: var(--text-secondary); margin-bottom: 0.5rem;">📁 其他 CSV 資料匯出</h3>
+                </div>
+
+                <div class="grid-2">
+                    <!-- Export by Project -->
+                    <div class="card">
+                        <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">依單一專案匯出</h3>
+                        <p style="margin-bottom: 1.25rem; color: var(--text-secondary); font-size: 0.85rem;">
+                            選擇單一專案以匯出其完整的工時紀錄 (CSV 格式)。
+                        </p>
+                        <div class="form-group">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <label for="export-project-select" style="margin-bottom: 0;">選擇專案</label>
+                                <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer; margin-bottom: 0;">
+                                    <input type="checkbox" id="export-show-archived" style="width: auto; margin: 0;" checked> 顯示已結案
+                                </label>
+                            </div>
+                            <select id="export-project-select"
+                                style="font-size: 0.95rem; padding: 0.5rem; width: 100%;">
+                                <option value="">請選擇...</option>
+                            </select>
+                        </div>
+                        <button id="btn-export-csv" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;" disabled>
+                            下載專案 CSV
+                        </button>
+                    </div>
+
+                    <!-- Export All by Date Range -->
+                    <div class="card">
+                        <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">依時間範圍匯出全部</h3>
+                        <p style="margin-bottom: 1.25rem; color: var(--text-secondary); font-size: 0.85rem;">
+                            選擇開始與結束日期，以匯出此區間內所有專案的工時紀錄。
+                        </p>
+                        <div class="grid-2" style="gap: 0.75rem; margin-bottom: 0.75rem;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="export-start-date" style="font-size: 0.85rem;">開始日期</label>
+                                <input type="date" id="export-start-date" style="padding: 0.45rem; font-size: 0.9rem;">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="export-end-date" style="font-size: 0.85rem;">結束日期</label>
+                                <input type="date" id="export-end-date" style="padding: 0.45rem; font-size: 0.9rem;">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                            <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" id="btn-shortcut-this-week">本週</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" id="btn-shortcut-this-month">本月</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" id="btn-shortcut-last-month">上月</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" id="btn-shortcut-this-year">今年</button>
+                        </div>
+                        <button id="btn-export-all-csv" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;">
+                            下載全部 CSV
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Create / Edit Project Modal (Modern Dialog) -->
+    <div id="create-project-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                <h3 id="project-modal-title" style="margin-bottom: 0; font-size: 1.2rem;">✨ 建立新專案</h3>
+                <button type="button" class="btn-modal-close" id="btn-close-project-modal" title="關閉視窗">✕</button>
+            </div>
+            <form id="create-project-form">
+                <div class="grid-2" style="gap: 0.75rem;">
+                    <div class="form-group">
+                        <label for="proj-year">年份</label>
+                        <select id="proj-year" required>
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026" selected>2026</option>
+                            <option value="2027">2027</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="proj-date">開始日期</label>
+                        <input type="date" id="proj-date" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="proj-name">專案名稱</label>
+                    <input type="text" id="proj-name" placeholder="例如：顧問委託案, 委託案..." required>
+                </div>
+                <div class="form-group">
+                    <label for="proj-client">發款單位 / 客戶組織</label>
+                    <input type="text" id="proj-client" list="clients-master-datalist" placeholder="例如：委託客戶名稱、發包單位..." autocomplete="off">
+                    <datalist id="clients-master-datalist"></datalist>
+                </div>
+                <div class="grid-2" style="gap: 0.75rem;">
+                    <div class="form-group">
+                        <label for="proj-category">專案類別 (目標本質)</label>
+                        <select id="proj-category" required>
+                            <option value="commercial" selected>💼 商業委託</option>
+                            <option value="pro_bono">🌱 公益奉獻</option>
+                            <option value="self_study">💡 自修創作</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="proj-status">專案狀態 (生命週期)</label>
+                        <select id="proj-status" required>
+                            <option value="bidding">💡 提案/開拓中</option>
+                            <option value="active" selected>🟢 執行中</option>
+                            <option value="pending_payment">⏳ 待請款</option>
+                            <option value="paid">✅ 已收齊</option>
+                            <option value="closed">📁 已結案</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid-2" style="gap: 0.75rem;">
+                    <div class="form-group">
+                        <label for="proj-billing-type">計費模式 (收益形式)</label>
+                        <select id="proj-billing-type" required>
+                            <option value="hourly" selected>⏱️ 計時發薪 / 月結回報 (需回報工時計算時薪)</option>
+                            <option value="fixed">💼 專案固定金額 / 分潤 (不計時數，固定總額)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="proj-revenue">合約/預算總額 (元，無則留空)</label>
+                        <input type="number" id="proj-revenue" placeholder="例如：100000" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="proj-subitems">預設專案子項目 / 工作階段 (以逗號分隔，方便日後選單點選)</label>
+                    <input type="text" id="proj-subitems" placeholder="例如：選題, 前置準備, 問卷設計, 分析問卷, 領域短文, AI SOP">
+                </div>
+
+                <div class="form-group">
+                    <label>專案性質標籤 (可複選)</label>
+                    <div id="proj-types-container"
+                        style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.5rem;">
+                        <!-- Checkboxes injected via JS -->
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" id="new-type-input" placeholder="新增標籤..."
+                            style="width: auto; padding: 6px 12px; font-size: 0.85rem;">
+                        <button type="button" id="add-type-btn" class="btn btn-secondary"
+                            style="padding: 6px 12px; font-size: 0.85rem;">+</button>
+                    </div>
+                </div>
+
+                <div style="text-align: right; display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-project-modal">取消</button>
+                    <button type="submit" class="btn btn-primary" id="btn-submit-project-modal">
+                        <span>+</span> 建立專案
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Entry Modal (Hidden by default) -->
+    <div id="edit-entry-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center;">
+        <div class="card" style="width: 90%; max-width: 400px; background: var(--bg-primary);">
+            <h3 style="margin-bottom: 1rem;">編輯紀錄</h3>
+            <form id="edit-entry-form">
+                <input type="hidden" id="edit-entry-id">
+                <div class="form-group">
+                    <label>專案</label>
+                    <select id="edit-entry-project" required>
+                        <option value="">請選擇專案...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" id="edit-entry-date" required>
+                </div>
+                <div class="form-group">
+                    <label>時數</label>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+                        <input type="number" id="edit-entry-hours-part" min="0" placeholder="時" style="flex: 1; padding: 0.5rem;" required>
+                        <span style="white-space: nowrap;">小時</span>
+                        <input type="number" id="edit-entry-minutes-part" min="0" max="59" placeholder="分" style="flex: 1; padding: 0.5rem;" required>
+                        <span style="white-space: nowrap;">分鐘</span>
+                    </div>
+                    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" onclick="app.adjustFormTime('edit-entry', 15)">+15分</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" onclick="app.adjustFormTime('edit-entry', 30)">+30分</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" onclick="app.adjustFormTime('edit-entry', 60)">+1h</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" onclick="app.adjustFormTime('edit-entry', -15)">-15分</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" onclick="app.adjustFormTime('edit-entry', -30)">-30分</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" onclick="app.adjustFormTime('edit-entry', -60)">-1h</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <input type="text" id="edit-entry-desc" required>
+                </div>
+                <div class="form-group">
+                    <label>子項目</label>
+                    <input type="text" id="edit-entry-subitem" list="subitems-datalist" placeholder="選擇或輸入子項目...">
+                </div>
+                <div class="form-group">
+                    <label style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" id="edit-entry-is-billed" style="width: auto; margin: 0;"> 已請款
+                    </label>
+                </div>
+                <div style="text-align: right; display: flex; justify-content: flex-end; gap: 1rem;">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="document.getElementById('edit-entry-modal').style.display = 'none'">取消</button>
+                    <button type="submit" class="btn btn-primary">儲存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Timer Save Modal (Hidden by default) -->
+    <div id="timer-save-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div class="card" style="width: 90%; max-width: 400px; background: var(--bg-primary);">
+            <h3 style="margin-bottom: 1rem;">計時結束</h3>
+            <div style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-tertiary); border-radius: 8px; text-align: center;">
+                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">總計時長</div>
+                <div id="timer-save-duration" style="font-size: 1.5rem; font-weight: bold; color: var(--accent-primary);">
+                    00:00:00
+                </div>
+            </div>
+            <form id="timer-save-form">
+                <div class="form-group">
+                    <label>歸類專案</label>
+                    <select id="timer-save-project-select" required></select>
+                </div>
+                <div class="form-group">
+                    <label>時數</label>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+                        <input type="number" id="timer-save-hours-part" min="0" placeholder="時" style="flex: 1; padding: 0.5rem;" required>
+                        <span style="white-space: nowrap;">小時</span>
+                        <input type="number" id="timer-save-minutes-part" min="0" max="59" placeholder="分" style="flex: 1; padding: 0.5rem;" required>
+                        <span style="white-space: nowrap;">分鐘</span>
+                    </div>
+                    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" onclick="app.adjustFormTime('timer-save', 15)">+15分</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" onclick="app.adjustFormTime('timer-save', 30)">+30分</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" onclick="app.adjustFormTime('timer-save', 60)">+1h</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" onclick="app.adjustFormTime('timer-save', -15)">-15分</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" onclick="app.adjustFormTime('timer-save', -30)">-30分</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; width: auto; font-weight: normal; margin: 0; min-height: unset; height: auto;" onclick="app.adjustFormTime('timer-save', -60)">-1h</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>工作內容說明</label>
+                    <input type="text" id="timer-save-desc" value="一般工時" required>
+                </div>
+                <div class="form-group">
+                    <label>子項目 / 任務型態</label>
+                    <input type="text" id="timer-save-subitem" list="subitems-datalist" placeholder="選擇或輸入任務型態...">
+                    <div id="timer-save-task-pills-container" style="display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.4rem;">
+                        <button type="button" class="btn-stage-pill btn-modal-task-pill" data-task="研究">🔍 研究</button>
+                        <button type="button" class="btn-stage-pill btn-modal-task-pill" data-task="訪談">🎤 訪談</button>
+                        <button type="button" class="btn-stage-pill btn-modal-task-pill" data-task="寫作">✍️ 寫作/整理</button>
+                        <button type="button" class="btn-stage-pill btn-modal-task-pill" data-task="PM">💼 PM/協調</button>
+                        <button type="button" class="btn-stage-pill btn-modal-task-pill" data-task="會議">👥 會議</button>
+                        <button type="button" class="btn-stage-pill btn-modal-task-pill" data-task="工作坊">🎯 工作坊</button>
+                        <button type="button" class="btn-stage-pill btn-modal-task-pill" data-task="企劃">📊 企劃/提案</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" id="timer-save-is-billed" style="width: auto; margin: 0;"> 已請款
+                    </label>
+                </div>
+                <div style="text-align: right; display: flex; justify-content: flex-end; gap: 0.8rem; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-secondary" id="timer-save-discard-btn" style="border-color: var(--danger); color: var(--danger);" title="捨棄本次計時，不保留任何時間紀錄">捨棄本次計時</button>
+                    <button type="button" class="btn btn-secondary" id="timer-save-cancel-btn" title="關閉此視窗並返回繼續計時">繼續計時</button>
+                    <button type="submit" class="btn btn-primary">儲存紀錄</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Project Subitems Quick Modal -->
+    <div id="project-subitems-modal" class="modal-overlay">
+        <div class="modal-card" style="background: #ffffff !important; max-width: 520px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                <h3 id="project-subitems-modal-title" style="margin-bottom: 0; font-size: 1.2rem;">🏷️ 設定專案專屬子項目</h3>
+                <button type="button" class="btn-modal-close" onclick="document.getElementById('project-subitems-modal').classList.remove('active')" title="關閉視窗">✕</button>
+            </div>
+            <div style="background: rgba(0, 102, 204, 0.06); border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 1rem; font-size: 0.82rem; color: var(--accent-primary); border: 1px solid rgba(0, 102, 204, 0.15); line-height: 1.5;">
+                📌 <strong>說明</strong>：此處設定僅適用於此專案的<strong>「原始自訂子項目」</strong>與<strong>「補登快捷按鈕」</strong>，各專案完全獨立。
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                設定此專案常用的工作階段與子任務名稱（以逗號分隔）。打卡或補登工時時，系統會自動轉換為快選膠囊，並在 WBS 與報表中獨立統計！
+            </p>
+            <form id="project-subitems-quick-form">
+                <input type="hidden" id="quick-subitems-project-id">
+                <div class="form-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                        <label for="quick-proj-subitems-input" style="margin-bottom: 0;">專案子項目清單 (逗號分隔)</label>
+                        <button type="button" class="btn btn-secondary" id="btn-extract-project-subitems" style="padding: 2px 8px; font-size: 0.78rem; color: var(--accent-primary); border-color: var(--accent-primary);" title="掃描本專案歷史紀錄文字，自動提煉最常出現的主題名稱">
+                            ✨ 從工時描述自動提煉
+                        </button>
+                    </div>
+                    <textarea id="quick-proj-subitems-input" rows="3" placeholder="例如：選題, 前置準備, 問卷設計, 分析問卷, 領域短文, AI Skill 開發" style="width: 100%; resize: vertical;"></textarea>
+                </div>
+                <div style="margin-bottom: 1.25rem;">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem;">💡 常用靈感推薦（點擊直接加入）：</div>
+                    <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;" id="quick-subitem-presets">
+                        <button type="button" class="btn-stage-pill" data-insert="AI Skill 開發">🤖 AI Skill 開發</button>
+                        <button type="button" class="btn-stage-pill" data-insert="提示詞工程">🤖 提示詞工程</button>
+                        <button type="button" class="btn-stage-pill" data-insert="專家訪談">🎤 專家訪談</button>
+                        <button type="button" class="btn-stage-pill" data-insert="問卷設計">📊 問卷設計</button>
+                        <button type="button" class="btn-stage-pill" data-insert="分析問卷">📊 分析問卷</button>
+                        <button type="button" class="btn-stage-pill" data-insert="指引手冊撰寫">✍️ 指引手冊撰寫</button>
+                        <button type="button" class="btn-stage-pill" data-insert="工作坊籌備">🎯 工作坊籌備</button>
+                        <button type="button" class="btn-stage-pill" data-insert="工作坊主持">🎯 工作坊主持</button>
+                        <button type="button" class="btn-stage-pill" data-insert="PM 與進度對齊">💼 PM 與進度對齊</button>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('project-subitems-modal').classList.remove('active')">取消</button>
+                    <button type="submit" class="btn btn-primary">💾 儲存並更新專案</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Batch Reclassify Subitems Modal -->
+    <div id="batch-reclassify-modal" class="modal-overlay">
+        <div class="modal-card" style="background: #ffffff !important; max-width: 580px; max-height: 88vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+                <h3 id="batch-reclassify-title" style="margin-bottom: 0; font-size: 1.2rem;">🏷️ 批次整理與合併專案子項目</h3>
+                <button type="button" class="btn-modal-close" onclick="document.getElementById('batch-reclassify-modal').classList.remove('active')" title="關閉視窗">✕</button>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.8rem;">
+                勾選要合併的舊標籤（或未分類紀錄），輸入統一的新子項目名稱，系統會一次性自動更新本專案的所有工時紀錄！
+            </p>
+            <div style="overflow-y: auto; flex: 1; max-height: 240px; margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.75rem; background: var(--bg-primary);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary);">選擇要調整的原始標籤：</span>
+                    <button type="button" id="btn-batch-select-all" class="btn-stage-pill" style="font-size: 0.75rem; padding: 2px 8px;">全選</button>
+                </div>
+                <div id="batch-reclassify-tags-list" style="display: flex; flex-direction: column; gap: 0.4rem;">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+            <form id="batch-reclassify-form">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label for="batch-target-subitem-input">合併 / 重新命名為的新子項目名稱：</label>
+                    <input type="text" id="batch-target-subitem-input" placeholder="例如：Sitemap流程規劃" required list="batch-target-suggestions">
+                    <datalist id="batch-target-suggestions"></datalist>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('batch-reclassify-modal').classList.remove('active')">取消</button>
+                    <button type="submit" class="btn btn-primary" id="btn-submit-batch-reclassify">⚡ 執行批次更新</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Global Taxonomy Settings Modal -->
+    <div id="taxonomy-settings-modal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 680px; max-height: 85vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div>
+                    <h3 style="margin-bottom: 0.2rem; font-size: 1.25rem;">⚙️ 全站工作型態字典管理</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0;">自訂與擴充全站智能語意歸納的專業型態與關鍵字規則</p>
+                </div>
+                <button type="button" class="btn-modal-close" onclick="document.getElementById('taxonomy-settings-modal').classList.remove('active')" title="關閉視窗">✕</button>
+            </div>
+
+            <div style="overflow-y: auto; flex: 1; padding-right: 0.5rem; margin-bottom: 1rem;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;" id="taxonomy-settings-table">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary); text-align: left;">
+                            <th style="padding: 6px 8px; width: 50px;">圖示</th>
+                            <th style="padding: 6px 8px; width: 140px;">型態名稱</th>
+                            <th style="padding: 6px 8px;">觸發關鍵字 (逗號分隔)</th>
+                            <th style="padding: 6px 8px; width: 60px; text-align: center;">代表色</th>
+                            <th style="padding: 6px 8px; width: 40px; text-align: center;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taxonomy-settings-tbody">
+                        <!-- Injected by JS -->
+                    </tbody>
+                </table>
+
+                <!-- Add New Nature Form Strip -->
+                <div style="margin-top: 1.25rem; padding: 12px; background: var(--bg-tertiary); border-radius: var(--radius-sm); border: 1px dashed var(--border-color);">
+                    <div style="font-weight: 600; font-size: 0.88rem; margin-bottom: 0.6rem; color: var(--text-primary);">➕ 新增自訂工作型態</div>
+                    <div style="display: grid; grid-template-columns: 60px 140px 1fr 50px auto; gap: 0.5rem; align-items: center;">
+                        <input type="text" id="new-nature-icon" placeholder="🤖" style="text-align: center;">
+                        <input type="text" id="new-nature-label" placeholder="例如：法規調研">
+                        <input type="text" id="new-nature-keywords" placeholder="關鍵字，例如：法規, 條例, 立法, 函釋">
+                        <input type="color" id="new-nature-color" value="#06b6d4" style="padding: 2px; height: 36px; cursor: pointer; border-radius: 4px;">
+                        <button type="button" class="btn btn-secondary" id="btn-add-custom-nature" style="padding: 6px 12px; white-space: nowrap;">＋ 加入</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; pt: 0.75rem; border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn btn-secondary" id="btn-reset-taxonomy-default" style="font-size: 0.82rem; color: var(--text-muted);">🔄 恢復系統預設字典</button>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('taxonomy-settings-modal').classList.remove('active')">取消</button>
+                    <button type="button" class="btn btn-primary" id="btn-save-taxonomy-settings">💾 儲存並套用全站</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WBS Drilldown Details Modal -->
+    <div id="wbs-drilldown-modal" class="modal-overlay">
+        <div class="modal-card" style="background: #ffffff !important; max-width: 800px; max-height: 88vh; display: flex; flex-direction: column; padding: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem;">
+                <div>
+                    <h3 id="wbs-drilldown-title" style="margin-bottom: 0.35rem; font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                        📋 原始工時明細
+                    </h3>
+                    <div id="wbs-drilldown-stats" style="font-size: 0.85rem; color: var(--text-secondary); display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    </div>
+                </div>
+                <button type="button" class="btn-modal-close" onclick="document.getElementById('wbs-drilldown-modal').classList.remove('active')" title="關閉視窗">✕</button>
+            </div>
+
+            <!-- Scrollable List Container -->
+            <div id="wbs-drilldown-list-container" style="overflow-y: auto; flex: 1; padding-right: 0.25rem; margin-bottom: 1rem;">
+                <!-- Dynamically rendered -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="display: flex; justify-content: space-between; align-items: center; pt: 0.75rem; border-top: 1px solid var(--border-color);">
+                <div id="wbs-drilldown-footer-action"></div>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('wbs-drilldown-modal').classList.remove('active')">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Sub-items Datalist -->
+    <datalist id="subitems-datalist"></datalist>
+
+    <!-- Scripts -->
+    <script src="assets/js/db.js"></script>
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/app.js"></script>
+
+    <script src="assets/js/views/dashboard.js"></script>
+    <script src="assets/js/views/project-details.js"></script>
+    <script src="assets/js/views/timer.js"></script>
+    <script src="assets/js/views/annual-goals.js"></script>
+    <script src="assets/js/views/export.js"></script>
+</body>
+
+</html>

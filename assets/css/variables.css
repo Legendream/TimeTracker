@@ -1,0 +1,48 @@
+:root {
+    /* Color Palette - Fresh Blue Theme */
+    --bg-primary: #f0f4f8;        /* Very subtle cool blue-gray */
+    --bg-secondary: #e1e8f0;      /* Sidebar: Soft blue-gray */
+    --bg-tertiary: #ffffff;       /* Cards: Pure White */
+    --bg-card: #ffffff;           /* Pure White Solid Background for Cards/Modals */
+    --border-color: #e2e8f0;      /* Slate 200 Border */
+    
+    --text-primary: #1e293b;      /* Slate 800 - Deep Blue-Black */
+    --text-secondary: #475569;    /* Slate 600 - Cool Gray */
+    --text-muted: #94a3b8;        /* Slate 400 */
+
+    --accent-primary: #0066cc;
+    /* Professional Blue */
+    --accent-secondary: #4d94ff;
+    /* Lighter Blue */
+    --accent-tertiary: #ff6b6b;
+    /* Soft Red/Coral */
+
+    --success: #10b981;
+    /* Emerald Green */
+    --warning: #f59e0b;
+    /* Amber */
+    --danger: #ef4444;
+    /* Red */
+
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 40px;
+
+    /* Radius */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+
+    /* Shadows - softer for light mode */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-glow: 0 0 15px rgba(0, 102, 204, 0.15);
+
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+}
