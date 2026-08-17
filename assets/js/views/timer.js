@@ -495,7 +495,7 @@ app.views['timer'] = {
                 container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 2rem;">今日尚無紀錄，點擊上方「開始計時」以記錄第一筆工作。</p>';
                 if (capsule) {
                     capsule.innerHTML = `
-                        <span class="stat-capsule-icon">📅</span>
+                        <span class="stat-capsule-icon">${Icons.render('calendar', { size: 16 })}</span>
                         <span class="stat-capsule-label">今日已累積：</span>
                         <strong class="stat-capsule-val" style="color: var(--text-muted); font-size: 1.05rem;">0.0 h</strong>
                     `;
@@ -509,7 +509,7 @@ app.views['timer'] = {
 
             if (capsule) {
                 capsule.innerHTML = `
-                    <span class="stat-capsule-icon">📅</span>
+                    <span class="stat-capsule-icon">${Icons.render('calendar', { size: 16 })}</span>
                     <span class="stat-capsule-label">今日已累積：</span>
                     <strong class="stat-capsule-val" style="color: var(--accent-primary); font-size: 1.05rem;">${dailyTotal.toFixed(1)} h</strong>
                     <span style="color: var(--text-muted); font-size: 0.82rem; margin-left: 0.25rem;">(${todayEntries.length} 筆任務 · ${distinctProjects.size} 個專案)</span>
@@ -534,9 +534,9 @@ app.views['timer'] = {
                         <div style="font-weight: bold; color: var(--accent-primary); font-size: 1.1rem; margin-right: 0.2rem;">
                             ${e.hours}h
                         </div>
-                        <button class="btn-resume-entry-timer" data-id="${e.id}" style="border: none; background: none; cursor: pointer; padding: 5px; font-size: 1rem; transition: transform 0.2s;" title="繼續累計此項目">▶️</button>
-                        <button class="btn-edit-entry-timer" data-id="${e.id}" style="border: none; background: none; cursor: pointer; color: var(--text-muted); padding: 5px;" title="編輯">✏️</button>
-                        <button class="btn-delete-entry" data-id="${e.id}" style="border: none; background: none; cursor: pointer; color: var(--text-muted); padding: 5px;" title="刪除">🗑️</button>
+                        <button class="btn-resume-entry-timer" data-id="${e.id}" style="border: none; background: none; cursor: pointer; padding: 5px; color: var(--success); display: inline-flex; align-items: center;" title="接續累計此項目">${Icons.render('play', { size: 15 })}</button>
+                        <button class="btn-edit-entry-timer" data-id="${e.id}" style="border: none; background: none; cursor: pointer; color: var(--text-muted); padding: 5px; display: inline-flex; align-items: center;" title="編輯">${Icons.render('edit', { size: 15 })}</button>
+                        <button class="btn-delete-entry" data-id="${e.id}" style="border: none; background: none; cursor: pointer; color: var(--text-muted); padding: 5px; display: inline-flex; align-items: center;" title="刪除">${Icons.render('trash', { size: 15 })}</button>
                     </div>
                 </div>
             `).join('');

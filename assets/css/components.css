@@ -947,6 +947,36 @@ textarea:focus {
 }
 
 /* ==========================================================================
+   Modern Line SVG Icon System & Status Dots
+   ========================================================================== */
+.svg-icon {
+    display: inline-block;
+    vertical-align: -0.15em;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.svg-icon.icon-xs { width: 12px; height: 12px; }
+.svg-icon.icon-sm { width: 14px; height: 14px; }
+.svg-icon.icon-md { width: 18px; height: 18px; }
+.svg-icon.icon-lg { width: 22px; height: 22px; }
+
+.status-indicator-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+.status-indicator-dot.status-active { background-color: var(--success, #10b981); box-shadow: 0 0 0 2.5px rgba(16, 185, 129, 0.2); }
+.status-indicator-dot.status-bidding { background-color: var(--warning, #f59e0b); box-shadow: 0 0 0 2.5px rgba(245, 158, 11, 0.2); }
+.status-indicator-dot.status-pending { background-color: #ea580c; box-shadow: 0 0 0 2.5px rgba(234, 88, 12, 0.2); }
+.status-indicator-dot.status-paid { background-color: #0284c7; box-shadow: 0 0 0 2.5px rgba(2, 132, 199, 0.2); }
+.status-indicator-dot.status-closed { background-color: #94a3b8; }
+
+/* ==========================================================================
    Custom Select Dropdown Component (MIT License)
    ========================================================================== */
 .custom-select-wrapper {
