@@ -589,6 +589,10 @@ app.views['annual-goals'] = {
         if (currentVal && select.querySelector(`option[value="${currentVal}"]`)) {
             select.value = currentVal;
         }
+
+        if (window.CustomSelect) {
+            CustomSelect.enhance(select);
+        }
     },
 
     populateOrgDatalist: (allRevenue) => {

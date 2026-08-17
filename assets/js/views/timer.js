@@ -58,6 +58,9 @@ app.views['timer'] = {
                 showClosed: true,
                 placeholder: '選擇專案...'
             });
+            if (window.CustomSelect) {
+                CustomSelect.enhance(select);
+            }
         } catch (e) {
             console.error("Error loading projects", e);
         }

@@ -262,6 +262,26 @@ const Utils = {
     },
 
     /**
+     * 將英文字母與數字轉換為 Unicode 粗體字符 (數學粗體)，確保在各系統原生選單皆呈現粗體
+     * @param {string} text 原始文字
+     * @returns {string} 轉換後的粗體文字
+     */
+    toBoldUnicode: (text) => {
+        if (!text) return '';
+        return String(text).replace(/[A-Za-z0-9]/g, (char) => {
+            const code = char.charCodeAt(0);
+            if (code >= 65 && code <= 90) { // A-Z
+                return String.fromCodePoint(0x1D5D4 + (code - 65));
+            } else if (code >= 97 && code <= 122) { // a-z
+                return String.fromCodePoint(0x1D5EE + (code - 97));
+            } else if (code >= 48 && code <= 57) { // 0-9
+                return String.fromCodePoint(0x1D7EC + (code - 48));
+            }
+            return char;
+        });
+    },
+
+    /**
      * 全站統一專案選單生成器 (Single Source of Truth)
      * 動態根據使用者建立的客戶、類別與狀態進行專業分組
      * @param {Array} projects 專案列表
@@ -329,7 +349,7 @@ const Utils = {
             const clientStr = (showClientPrefix && p.client) ? `[${p.client}] ` : '';
             const billingBadge = p.billingType === 'fixed' ? ' 💼 (固定)' : ` ⏱️ ($${Utils.DEFAULT_HOURLY_RATE}/h)`;
             const closedSuffix = p.status === 'closed' ? ' [已結案]' : '';
-            return `<option value="${p.id}">${Utils.escapeHtml(clientStr + cleanName + billingBadge + closedSuffix)}</option>`;
+            return `<option value="${p.id}">&nbsp;&nbsp;↳ ${Utils.escapeHtml(clientStr + cleanName + billingBadge + closedSuffix)}</option>`;
         };
 
         let html = '';
@@ -347,17 +367,18 @@ const Utils = {
 
         sortedClientNames.forEach(clientName => {
             const list = clientGroups[clientName];
-            html += `<optgroup label="🏢 ${Utils.escapeHtml(clientName)} (${list.length} 個專案)">${list.map(p => makeOption(p, false)).join('')}</optgroup>`;
+            const boldClient = Utils.toBoldUnicode(clientName);
+            html += `<optgroup label="🏢 ══【 ${Utils.escapeHtml(boldClient)} 】(${list.length} 個專案) ══">${list.map(p => makeOption(p, false)).join('')}</optgroup>`;
         });
 
         if (unassignedCommercial.length > 0) {
-            html += `<optgroup label="💼 商業委託專案">${unassignedCommercial.map(p => makeOption(p, false)).join('')}</optgroup>`;
+            html += `<optgroup label="💼 ══【 商業委託專案 】(${unassignedCommercial.length} 個專案) ══">${unassignedCommercial.map(p => makeOption(p, false)).join('')}</optgroup>`;
         }
         if (nonProfitAndSelf.length > 0) {
-            html += `<optgroup label="🌱 公益奉獻 / 探索 / 自修創作">${nonProfitAndSelf.map(p => makeOption(p, true)).join('')}</optgroup>`;
+            html += `<optgroup label="🌱 ══【 公益奉獻 / 探索 / 自修創作 】(${nonProfitAndSelf.length} 個專案) ══">${nonProfitAndSelf.map(p => makeOption(p, true)).join('')}</optgroup>`;
         }
         if (closedProjects.length > 0) {
-            html += `<optgroup label="📁 已結案歷史專案">${closedProjects.map(p => makeOption(p, true)).join('')}</optgroup>`;
+            html += `<optgroup label="📁 ══【 已結案歷史專案 】(${closedProjects.length} 個專案) ══">${closedProjects.map(p => makeOption(p, true)).join('')}</optgroup>`;
         }
 
         return html;

@@ -432,6 +432,10 @@ app.views['project-details'] = {
             if (currentVal && select.querySelector(`option[value="${currentVal}"]`)) {
                 select.value = currentVal;
             }
+
+            if (window.CustomSelect) {
+                CustomSelect.enhance(select);
+            }
         } catch (e) {
             console.error("Error loading projects", e);
         }

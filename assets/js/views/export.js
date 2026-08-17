@@ -61,6 +61,10 @@ app.views['export'] = {
                     select.value = '';
                     btn.disabled = true;
                 }
+
+                if (window.CustomSelect) {
+                    CustomSelect.enhance(select);
+                }
             } catch (e) {
                 console.error("Error loading projects for export", e);
             }
