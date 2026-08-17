@@ -491,10 +491,11 @@ app.views['project-details'] = {
             const lifetimeReceived = projectRevenues.reduce((sum, r) => sum + Number(r.amount || 0), 0);
             const budget = Number(project.revenue || 0);
             const unpaid = Math.max(0, budget - lifetimeReceived);
+            const hourlyRate = Number(project.hourlyRate) || Utils.DEFAULT_HOURLY_RATE;
 
-            const displayAmount = isHourly ? Math.round(totalHours * Utils.DEFAULT_HOURLY_RATE) : lifetimeReceived;
-            const displayAmountLabel = isHourly ? '💵 累計產值' : '💵 專案已收';
-            const displayRateLabel = isHourly ? '$0/h' : (totalHours > 0 && lifetimeReceived > 0 ? `$${Math.round(lifetimeReceived / totalHours).toLocaleString()}/h` : '-');
+            const displayAmount = isHourly ? Math.round(totalHours * hourlyRate) : lifetimeReceived;
+            const displayAmountLabel = isHourly ? '累計產值' : '專案已收';
+            const displayRateLabel = isHourly ? `$${hourlyRate}/h` : (totalHours > 0 && lifetimeReceived > 0 ? `$${Math.round(lifetimeReceived / totalHours).toLocaleString()}/h` : '-');
 
             const catInfo = Utils.getCategoryInfo(project.category);
             const statusInfo = Utils.getStatusInfo(project.status);
@@ -506,14 +507,14 @@ app.views['project-details'] = {
                         <span>${Utils.escapeHtml(project.name)}</span>
                         <span class="project-client-badge">${Icons.render('building', { size: 12 })} ${Utils.escapeHtml(project.client || '未指定客戶')}</span>
                         <span style="font-size: 0.78rem; padding: 2px 8px; border-radius: 12px; background: ${billingInfo.color}15; color: ${billingInfo.color}; border: 1px solid ${billingInfo.color}35; font-weight: 600;">
-                            ${isHourly ? '計時發薪 ($0/h)' : billingInfo.label}
+                            ${isHourly ? `計時發薪 ($${hourlyRate}/h)` : billingInfo.label}
                         </span>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                         <!-- Quick Category Selector -->
                         <select id="details-quick-category" style="padding: 4px 10px; font-size: 0.8rem; border-radius: 14px; background: ${catInfo.color}; color: white; border: none; font-weight: 600; cursor: pointer;" title="快速切換專案類別">
                             <option value="commercial" ${project.category === 'commercial' ? 'selected' : ''}>商業委託</option>
-                            <option value="pro_bono" ${project.category === 'pro_bono' ? 'selected' : ''}>公益奉送</option>
+                            <option value="pro_bono" ${project.category === 'pro_bono' ? 'selected' : ''}>公益奉獻</option>
                             <option value="self_study" ${project.category === 'self_study' ? 'selected' : ''}>自修創作</option>
                         </select>
 
@@ -542,7 +543,7 @@ app.views['project-details'] = {
                         <span class="project-metric-val" style="color: ${displayAmount > 0 ? 'var(--success)' : 'var(--text-muted)'};">$${displayAmount.toLocaleString()}</span>
                     </div>
                     <div class="project-metric-item">
-                        <span class="project-metric-label">${isHourly ? '固定時薪' : '實質時薪'}</span>
+                        <span class="project-metric-label">${isHourly ? '專案時薪' : '實質時薪'}</span>
                         <span class="project-metric-val" style="color: ${displayRateLabel !== '-' ? 'var(--accent-primary)' : 'var(--text-muted)'};">${displayRateLabel}</span>
                     </div>
                 </div>
@@ -567,9 +568,14 @@ app.views['project-details'] = {
                     </div>` : ''}
                     ${isHourly ? `
                     <div>
-                        <span style="color: var(--text-secondary);">計費說明：</span>
-                        <strong style="color: var(--accent-primary);">專案計時發薪（$${Utils.DEFAULT_HOURLY_RATE}/hr）</strong>
-                    </div>` : ''}
+                        <span style="color: var(--text-secondary);">計費模式：</span>
+                        <strong style="color: var(--accent-primary);">專案計時發薪（$${hourlyRate}/hr）</strong>
+                    </div>
+                    ${budget > 0 ? `
+                    <div>
+                        <span style="color: var(--text-secondary);">預算上限：</span>
+                        <strong>$${budget.toLocaleString()}</strong>
+                    </div>` : ''}` : ''}
                 </div>
             `;
 

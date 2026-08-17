@@ -858,33 +858,37 @@
                     <div class="form-group">
                         <label for="proj-category">專案類別 (目標本質)</label>
                         <select id="proj-category" required>
-                            <option value="commercial" selected>💼 商業委託</option>
-                            <option value="pro_bono">🌱 公益奉獻</option>
-                            <option value="self_study">💡 自修創作</option>
+                            <option value="commercial" selected>商業委託</option>
+                            <option value="pro_bono">公益奉獻</option>
+                            <option value="self_study">自修創作</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="proj-status">專案狀態 (生命週期)</label>
                         <select id="proj-status" required>
-                            <option value="bidding">💡 提案/開拓中</option>
-                            <option value="active" selected>🟢 執行中</option>
-                            <option value="pending_payment">⏳ 待請款</option>
-                            <option value="paid">✅ 已收齊</option>
-                            <option value="closed">📁 已結案</option>
+                            <option value="bidding">提案/開拓中</option>
+                            <option value="active" selected>執行中</option>
+                            <option value="pending_payment">待請款</option>
+                            <option value="paid">已收齊</option>
+                            <option value="closed">已結案</option>
                         </select>
                     </div>
                 </div>
-                <div class="grid-2" style="gap: 0.75rem;">
+                <div class="grid-3" style="display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 0.75rem;">
                     <div class="form-group">
-                        <label for="proj-billing-type">計費模式 (收益形式)</label>
+                        <label for="proj-billing-type">計費模式</label>
                         <select id="proj-billing-type" required>
-                            <option value="hourly" selected>⏱️ 計時發薪 / 月結回報 (需回報工時計算時薪)</option>
-                            <option value="fixed">💼 專案固定金額 / 分潤 (不計時數，固定總額)</option>
+                            <option value="hourly" selected>計時發薪 / 月結</option>
+                            <option value="fixed">固定金額 / 分潤</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="proj-revenue">合約/預算總額 (元，無則留空)</label>
-                        <input type="number" id="proj-revenue" placeholder="例如：100000" min="0">
+                    <div class="form-group" id="proj-hourly-rate-group">
+                        <label for="proj-hourly-rate">時薪基準 ($/h)</label>
+                        <input type="number" id="proj-hourly-rate" value="0" min="0" step="50" placeholder="例如：0">
+                    </div>
+                    <div class="form-group" id="proj-revenue-group">
+                        <label for="proj-revenue" id="proj-revenue-label">預算/合約上限 (元)</label>
+                        <input type="number" id="proj-revenue" placeholder="無則留空" min="0">
                     </div>
                 </div>
 

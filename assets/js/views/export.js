@@ -17,7 +17,28 @@ app.views['export'] = {
         }
 
         // 3. Bind Billing Statement Event Listeners
-        ['billing-client-select', 'billing-month-input', 'billing-hourly-rate'].forEach(id => {
+        const clientSelect = document.getElementById('billing-client-select');
+        if (clientSelect && !clientSelect.dataset.listening) {
+            clientSelect.addEventListener('change', async (e) => {
+                const clientVal = e.target.value;
+                if (clientVal) {
+                    try {
+                        const projects = await db.getAll('projects');
+                        const clientProjects = projects.filter(p => (p.client || '').trim() === clientVal.trim() && p.hourlyRate);
+                        if (clientProjects.length > 0) {
+                            const rateInput = document.getElementById('billing-hourly-rate');
+                            if (rateInput) rateInput.value = clientProjects[0].hourlyRate;
+                        }
+                    } catch (err) {
+                        console.error('Error auto-filling client hourly rate', err);
+                    }
+                }
+                app.views['export'].renderBillingStatement();
+            });
+            clientSelect.dataset.listening = 'true';
+        }
+
+        ['billing-month-input', 'billing-hourly-rate'].forEach(id => {
             const el = document.getElementById(id);
             if (el && !el.dataset.listening) {
                 el.addEventListener('change', () => app.views['export'].renderBillingStatement());
