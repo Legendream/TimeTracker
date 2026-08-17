@@ -781,18 +781,19 @@ app.views['dashboard'] = {
             const pipelineTabsContainer = document.getElementById('dashboard-pipeline-tabs');
             if (pipelineTabsContainer) {
                 const tabs = [
-                    { key: 'active', label: '🟢 執行中', count: activeCount },
-                    { key: 'bidding', label: '💡 提案/開拓中', count: biddingCount },
-                    { key: 'pending_payment', label: '🚨 待請款', count: pendingPaymentCount },
-                    { key: 'closed', label: '📁 歷史結案', count: closedCount },
-                    { key: 'ALL', label: '🌐 全部進行中', count: allCount }
+                    { key: 'active', dotClass: 'status-active', label: '執行中', count: activeCount },
+                    { key: 'bidding', dotClass: 'status-bidding', label: '提案/開拓中', count: biddingCount },
+                    { key: 'pending_payment', dotClass: 'status-pending', label: '待請款', count: pendingPaymentCount },
+                    { key: 'closed', dotClass: 'status-closed', label: '歷史結案', count: closedCount },
+                    { key: 'ALL', dotClass: '', label: '全部進行中', count: allCount }
                 ];
 
                 pipelineTabsContainer.innerHTML = tabs.map(tab => {
                     const isTabActive = activeStatusSet.has(tab.key);
+                    const dotHtml = tab.dotClass ? `<span class="status-indicator-dot ${tab.dotClass}"></span>` : '';
                     return `
                         <button type="button" class="pipeline-tab-btn ${isTabActive ? 'active' : ''}" data-status="${tab.key}" title="可點擊複選多個狀態">
-                            <span>${tab.label}</span>
+                            ${dotHtml}<span>${tab.label}</span>
                             <span class="pipeline-tab-count">${tab.count}</span>
                         </button>
                     `;
@@ -828,7 +829,7 @@ app.views['dashboard'] = {
             }
 
             if (projects.length === 0) {
-                list.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 2rem;">尚無專案，請點擊上方「➕ 建立新專案」按鈕。</div>';
+                list.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 2rem;">尚無專案，請點擊上方「建立新專案」按鈕。</div>';
                 return;
             }
 
@@ -845,7 +846,7 @@ app.views['dashboard'] = {
                 const actualReceived = revMap[p.id] || 0;
 
                 const displayAmount = isHourly ? hourlyVal : actualReceived;
-                const displayAmountLabel = isHourly ? '💵 產值' : '💵 已收';
+                const displayAmountLabel = isHourly ? '預估產值' : '已入帳';
                 const displayRate = isHourly ? Utils.DEFAULT_HOURLY_RATE : (hours > 0 && actualReceived > 0 ? Math.round(actualReceived / hours) : 0);
                 const displayRateLabel = isHourly ? '$0/h' : (displayRate > 0 ? `$${displayRate.toLocaleString()}/h` : '-');
 
@@ -925,9 +926,9 @@ app.views['dashboard'] = {
                      `;
                 } else {
                     actionsHtml = `
-                          <button type="button" class="btn-edit" data-id="${p.id}" style="border:none; background:none; cursor:pointer; font-size:1.05rem; padding: 2px;" title="編輯專案">✏️</button>
-                          <button type="button" class="btn-close-project" data-id="${p.id}" style="border:none; background:none; cursor:pointer; font-size:1.05rem; padding: 2px;" title="${isClosed ? '重新開啟' : '結案/封存'}">${isClosed ? '↩️' : '✅'}</button>
-                          <button type="button" class="btn-delete" data-id="${p.id}" style="border:none; background:none; cursor:pointer; font-size:1.05rem; padding: 2px;" title="刪除專案">🗑️</button>
+                          <button type="button" class="btn-edit" data-id="${p.id}" style="border:none; background:none; cursor:pointer; color: var(--text-secondary); padding: 4px;" title="編輯專案">${Icons.render('edit', { size: 15 })}</button>
+                          <button type="button" class="btn-close-project" data-id="${p.id}" style="border:none; background:none; cursor:pointer; color: var(--text-secondary); padding: 4px;" title="${isClosed ? '重新開啟' : '結案/封存'}">${isClosed ? Icons.render('link', { size: 15 }) : Icons.render('check-circle', { size: 15 })}</button>
+                          <button type="button" class="btn-delete" data-id="${p.id}" style="border:none; background:none; cursor:pointer; color: var(--text-muted); padding: 4px;" title="刪除專案">${Icons.render('trash', { size: 15 })}</button>
                      `;
                 }
 
@@ -936,7 +937,7 @@ app.views['dashboard'] = {
                      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem;">
                          <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
                              <span style="background: var(--bg-tertiary); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">${yearDisplay}</span>
-                             <span class="project-client-badge">🏢 ${p.client || '未指定客戶'}</span>
+                             <span class="project-client-badge">${Icons.render('building', { size: 12 })} ${p.client || '未指定客戶'}</span>
                          </div>
                          <div style="display: flex; gap: 0.4rem; align-items: center;">
                               <span style="font-size: 0.75rem; color: var(--text-muted);">${Utils.formatDate(p.startDate)}</span>
@@ -950,7 +951,7 @@ app.views['dashboard'] = {
 
                      <div class="project-metric-grid" style="margin-bottom: 0.6rem;">
                          <div class="project-metric-item">
-                             <span class="project-metric-label">⏱️ 工時</span>
+                             <span class="project-metric-label">投入工時</span>
                              <span class="project-metric-val">${item.hours.toFixed(1)} h</span>
                          </div>
                          <div class="project-metric-item">
@@ -958,15 +959,15 @@ app.views['dashboard'] = {
                              <span class="project-metric-val" style="color: ${item.displayAmount > 0 ? 'var(--success)' : 'var(--text-muted)'};">$${item.displayAmount.toLocaleString()}</span>
                          </div>
                          <div class="project-metric-item">
-                             <span class="project-metric-label">⚡ 時薪</span>
+                             <span class="project-metric-label">實質時薪</span>
                              <span class="project-metric-val" style="color: ${item.displayRateLabel !== '-' ? 'var(--accent-primary)' : 'var(--text-muted)'};">${item.displayRateLabel}</span>
                          </div>
                      </div>
 
                      <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
-                         <span style="background: ${item.catInfo.color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;">${item.catInfo.icon} ${item.catInfo.label}</span>
-                         <span style="background: ${item.statusInfo.bg}; color: ${item.statusInfo.color}; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 700;">${item.statusInfo.icon} ${item.statusInfo.label}</span>
-                         <span style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;">${item.isHourly ? '⏱️ 計時 ($0/h)' : '💼 固定分潤'}</span>
+                         <span style="background: ${item.catInfo.color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;">${item.catInfo.label}</span>
+                         <span style="background: ${item.statusInfo.bg}; color: ${item.statusInfo.color}; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 700;"><span class="status-indicator-dot" style="background-color: ${item.statusInfo.color};"></span>${item.statusInfo.label}</span>
+                         <span style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;">${item.isHourly ? '計時 ($0/h)' : '固定金額'}</span>
                          ${(p.types || []).map(t => `<span style="background: rgba(0, 102, 204, 0.08); color: var(--accent-primary); padding: 2px 6px; border-radius: 8px; font-size: 0.72rem;">${t}</span>`).join('')}
                      </div>
                  </div>

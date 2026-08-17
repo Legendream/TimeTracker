@@ -57,7 +57,7 @@ const CustomSelect = {
         const searchInput = document.createElement('input');
         searchInput.type = 'text';
         searchInput.className = 'custom-select-search-input';
-        searchInput.placeholder = '🔍 搜尋專案名稱、客戶...';
+        searchInput.placeholder = '搜尋專案名稱、客戶...';
         searchInput.autocomplete = 'off';
         searchBox.appendChild(searchInput);
         dropdown.appendChild(searchBox);
@@ -214,14 +214,13 @@ const CustomSelect = {
                     countText = countMatch[1];
                     // 移除符號與計數部分取得純標題
                     groupTitleText = rawLabel.replace(/\([^)]+\)/, '').replace(/^[🏢💼🌱📁\s═【】─]+/, '').replace(/[═【】─\s]+$/, '').trim();
-                    const iconMatch = rawLabel.match(/^[🏢💼🌱📁]/);
-                    const icon = iconMatch ? iconMatch[0] + ' ' : '🏢 ';
+                    const icon = typeof Icons !== 'undefined' ? Icons.render('building', { size: 14 }) + ' ' : '';
                     groupTitleText = icon + groupTitleText;
                 }
 
                 const titleEl = document.createElement('div');
                 titleEl.className = 'custom-select-group-title';
-                titleEl.innerText = groupTitleText;
+                titleEl.innerHTML = groupTitleText;
 
                 header.appendChild(titleEl);
 
@@ -276,14 +275,14 @@ const CustomSelect = {
         let cleanText = rawText;
         let badgeHtml = '';
 
-        if (cleanText.includes('💼 (固定)')) {
-            cleanText = cleanText.replace('💼 (固定)', '').trim();
-            badgeHtml += '<span class="custom-select-tag tag-fixed">💼 固定</span>';
-        } else if (cleanText.includes('⏱️')) {
-            const matchRate = cleanText.match(/⏱️\s*\(\$([^/]+)\/h\)/);
+        if (cleanText.includes('💼 (固定)') || cleanText.includes('(固定)')) {
+            cleanText = cleanText.replace('💼 (固定)', '').replace('(固定)', '').trim();
+            badgeHtml += '<span class="custom-select-tag tag-fixed">固定</span>';
+        } else if (cleanText.includes('⏱️') || cleanText.includes('/h')) {
+            const matchRate = cleanText.match(/\(?\$?([^/]+)\/h\)?/);
             const rateStr = matchRate ? `$${matchRate[1]}/h` : '計時';
-            cleanText = cleanText.replace(/⏱️\s*\([^)]+\)/, '').trim();
-            badgeHtml += `<span class="custom-select-tag tag-hourly">⏱️ ${rateStr}</span>`;
+            cleanText = cleanText.replace(/⏱️\s*\([^)]+\)/, '').replace(/\([^)]+\/h\)/, '').trim();
+            badgeHtml += `<span class="custom-select-tag tag-hourly">${rateStr}</span>`;
         }
 
         if (cleanText.includes('[已結案]')) {
