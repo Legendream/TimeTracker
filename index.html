@@ -335,9 +335,14 @@
 
                 <div class="card" style="text-align: center; padding: 3rem 2rem; margin-bottom: 2rem;">
                     <!-- Resume Timer Indicator -->
-                    <div id="timer-resume-indicator" style="display: none; margin-bottom: 1.5rem; padding: 0.6rem 1.2rem; background-color: rgba(0, 102, 204, 0.08); border: 1px solid rgba(0, 102, 204, 0.2); border-radius: var(--radius-full); font-size: 0.9rem; color: var(--accent-primary); align-items: center; justify-content: center; gap: 0.5rem; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.4;">
-                        <i data-icon="link" data-size="15"></i> 正在累加至現有紀錄：<span id="timer-resume-entry-details" style="font-weight: 600;">...</span>
-                        <button type="button" id="timer-resume-cancel-link-btn" style="border: none; background: none; color: var(--danger); cursor: pointer; font-size: 0.85rem; font-weight: bold; text-decoration: underline; padding: 0; margin-left: 0.5rem;" title="不覆寫此紀錄，改為新增獨立紀錄（時間將自動扣除原紀錄時數）">改為獨立計時</button>
+                    <div id="timer-resume-indicator" class="timer-resume-banner" style="display: none;">
+                        <span class="timer-resume-tag">
+                            <i data-icon="link" data-size="12"></i> 累加現有紀錄
+                        </span>
+                        <div id="timer-resume-entry-details" class="timer-resume-details">...</div>
+                        <button type="button" id="timer-resume-cancel-link-btn" class="btn-resume-disconnect" title="不覆寫此紀錄，改為新增獨立紀錄（時間將自動扣除原紀錄時數）">
+                            改為獨立計時
+                        </button>
                     </div>
                     <div id="timer-display"
                         style="font-size: 4.8rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-bottom: 1rem; letter-spacing: -1px; color: var(--text-primary);">

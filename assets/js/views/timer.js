@@ -106,11 +106,15 @@ app.views['timer'] = {
                     if (entry) {
                         db.get('projects', entry.projectId).then(proj => {
                             const projName = proj ? proj.name : '未知專案';
-                            const detailStr = `${projName} (原已記錄 ${entry.hours}h${entry.subItem ? ' - ' + entry.subItem : ''}${entry.description ? '：' + entry.description : ''})`;
                             const detailsEl = document.getElementById('timer-resume-entry-details');
-                            if (detailsEl) detailsEl.innerText = detailStr;
+                            if (detailsEl) {
+                                detailsEl.innerHTML = app.views['timer'].formatResumeIndicatorHtml(projName, entry);
+                            }
                             const ind = document.getElementById('timer-resume-indicator');
-                            if (ind) ind.style.display = 'inline-flex';
+                            if (ind) {
+                                ind.style.display = 'inline-flex';
+                                if (typeof Icons !== 'undefined') Icons.replace(ind);
+                            }
                         });
                     }
                 }).catch(err => console.error("Error restoring resume indicator", err));
@@ -735,11 +739,15 @@ app.views['timer'] = {
             document.getElementById('timer-stop-btn').style.display = 'inline-block';
 
             // Display details in indicator
-            const detailStr = `${projectName} (原已記錄 ${entry.hours}h${entry.subItem ? ' - ' + entry.subItem : ''}${entry.description ? '：' + entry.description : ''})`;
             const detailsEl = document.getElementById('timer-resume-entry-details');
-            if (detailsEl) detailsEl.innerText = detailStr;
+            if (detailsEl) {
+                detailsEl.innerHTML = app.views['timer'].formatResumeIndicatorHtml(projectName, entry);
+            }
             const ind = document.getElementById('timer-resume-indicator');
-            if (ind) ind.style.display = 'inline-flex';
+            if (ind) {
+                ind.style.display = 'inline-flex';
+                if (typeof Icons !== 'undefined') Icons.replace(ind);
+            }
 
             // Start Ticking
             app.views['timer'].updateDisplay();
@@ -755,6 +763,20 @@ app.views['timer'] = {
             console.error("Error resuming entry", err);
             alert("載入紀錄失敗");
         }
+    },
+
+    formatResumeIndicatorHtml: (projectName, entry) => {
+        const pName = Utils.escapeHtml(projectName || '未知專案');
+        const hours = Number(entry.hours || 0).toFixed(1);
+        const sub = entry.subItem ? Utils.escapeHtml(entry.subItem) : '';
+        const desc = entry.description ? Utils.escapeHtml(entry.description) : '';
+        const extra = [sub, desc].filter(Boolean).join(' · ');
+
+        return `
+            <strong style="color: var(--text-primary); font-weight: 700;">${pName}</strong>
+            <span style="background: var(--bg-tertiary); color: var(--text-secondary); padding: 1px 6px; border-radius: 4px; font-size: 0.78rem; font-weight: 600;">已累計 ${hours}h</span>
+            ${extra ? `<span style="color: var(--text-muted); font-size: 0.8rem;">(${extra})</span>` : ''}
+        `;
     },
 
     disconnectResumeEntry: async () => {
