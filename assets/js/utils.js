@@ -308,11 +308,28 @@ const Utils = {
         nonProfitAndSelf.sort(sortByName);
         closedProjects.sort(sortByName);
 
-        const makeOption = (p) => {
-            const clientStr = p.client ? `[${p.client}] ` : '';
+        const cleanProjectDisplayName = (name, client) => {
+            let clean = name || '';
+            if (client) {
+                const clientBracket = `[${client}]`;
+                if (clean.startsWith(clientBracket)) {
+                    clean = clean.substring(clientBracket.length).trim();
+                }
+            }
+            // Strip generic bracket if it matches part of client name e.g. [千綺]
+            const match = clean.match(/^\[([^\]]+)\]\s*(.*)$/);
+            if (match && client && (client.includes(match[1]) || match[1].includes(client))) {
+                clean = match[2];
+            }
+            return clean || name;
+        };
+
+        const makeOption = (p, showClientPrefix = false) => {
+            const cleanName = cleanProjectDisplayName(p.name, p.client);
+            const clientStr = (showClientPrefix && p.client) ? `[${p.client}] ` : '';
             const billingBadge = p.billingType === 'fixed' ? ' 💼 (固定)' : ` ⏱️ ($${Utils.DEFAULT_HOURLY_RATE}/h)`;
             const closedSuffix = p.status === 'closed' ? ' [已結案]' : '';
-            return `<option value="${p.id}">${Utils.escapeHtml(clientStr + p.name + billingBadge + closedSuffix)}</option>`;
+            return `<option value="${p.id}">${Utils.escapeHtml(clientStr + cleanName + billingBadge + closedSuffix)}</option>`;
         };
 
         let html = '';
@@ -330,17 +347,17 @@ const Utils = {
 
         sortedClientNames.forEach(clientName => {
             const list = clientGroups[clientName];
-            html += `<optgroup label="🏢 ${Utils.escapeHtml(clientName)} (${list.length} 個專案)">${list.map(makeOption).join('')}</optgroup>`;
+            html += `<optgroup label="🏢 ${Utils.escapeHtml(clientName)} (${list.length} 個專案)">${list.map(p => makeOption(p, false)).join('')}</optgroup>`;
         });
 
         if (unassignedCommercial.length > 0) {
-            html += `<optgroup label="💼 商業委託專案">${unassignedCommercial.map(makeOption).join('')}</optgroup>`;
+            html += `<optgroup label="💼 商業委託專案">${unassignedCommercial.map(p => makeOption(p, false)).join('')}</optgroup>`;
         }
         if (nonProfitAndSelf.length > 0) {
-            html += `<optgroup label="🌱 公益奉獻 / 探索 / 自修創作">${nonProfitAndSelf.map(makeOption).join('')}</optgroup>`;
+            html += `<optgroup label="🌱 公益奉獻 / 探索 / 自修創作">${nonProfitAndSelf.map(p => makeOption(p, true)).join('')}</optgroup>`;
         }
         if (closedProjects.length > 0) {
-            html += `<optgroup label="📁 已結案歷史專案">${closedProjects.map(makeOption).join('')}</optgroup>`;
+            html += `<optgroup label="📁 已結案歷史專案">${closedProjects.map(p => makeOption(p, true)).join('')}</optgroup>`;
         }
 
         return html;
