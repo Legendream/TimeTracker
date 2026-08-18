@@ -9,7 +9,10 @@ app.views['dashboard'] = {
         await app.views['dashboard'].populateClientsDatalist();
         await app.views['dashboard'].renderProjects();
 
-        // 1. Bind Open Create Modal Button
+        // 1. Bind Modal and Form Events (Global fallback)
+        app.views['dashboard'].bindModalEvents();
+
+        // 1b. Bind Open Create Modal Button
         const openModalBtn = document.getElementById('btn-open-create-project-modal');
         if (openModalBtn && !openModalBtn.dataset.listening) {
             openModalBtn.addEventListener('click', () => {
@@ -17,41 +20,6 @@ app.views['dashboard'] = {
             });
             openModalBtn.dataset.listening = 'true';
         }
-
-        // 2. Bind Close Modal Buttons
-        const closeModalBtn = document.getElementById('btn-close-project-modal');
-        if (closeModalBtn && !closeModalBtn.dataset.listening) {
-            closeModalBtn.addEventListener('click', () => {
-                app.views['dashboard'].closeModal();
-            });
-            closeModalBtn.dataset.listening = 'true';
-        }
-
-        const cancelModalBtn = document.getElementById('btn-cancel-project-modal');
-        if (cancelModalBtn && !cancelModalBtn.dataset.listening) {
-            cancelModalBtn.addEventListener('click', () => {
-                app.views['dashboard'].closeModal();
-            });
-            cancelModalBtn.dataset.listening = 'true';
-        }
-
-        // Close on Backdrop Click
-        const modalOverlay = document.getElementById('create-project-modal');
-        if (modalOverlay && !modalOverlay.dataset.listening) {
-            modalOverlay.addEventListener('click', (e) => {
-                if (e.target === modalOverlay) {
-                    app.views['dashboard'].closeModal();
-                }
-            });
-            modalOverlay.dataset.listening = 'true';
-        }
-
-        // Close on ESC key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modalOverlay && modalOverlay.classList.contains('active')) {
-                app.views['dashboard'].closeModal();
-            }
-        });
 
         // 3. Bind Collapsible Chart Toggle Button
         const toggleChartBtn = document.getElementById('btn-toggle-annual-chart');
@@ -96,20 +64,6 @@ app.views['dashboard'] = {
         if (saveTaxonomyBtn && !saveTaxonomyBtn.dataset.listening) {
             saveTaxonomyBtn.addEventListener('click', app.views['dashboard'].handleSaveTaxonomySettings);
             saveTaxonomyBtn.dataset.listening = 'true';
-        }
-
-        // 4. Bind Create / Edit Project Form Submit
-        const form = document.getElementById('create-project-form');
-        if (form && !form.dataset.listening) {
-            form.addEventListener('submit', app.views['dashboard'].handleFormSubmit);
-            form.dataset.listening = 'true';
-        }
-
-        // 5. Bind Add Project Type Tag Button
-        const addTypeBtn = document.getElementById('add-type-btn');
-        if (addTypeBtn && !addTypeBtn.dataset.listening) {
-            addTypeBtn.addEventListener('click', app.views['dashboard'].handleAddType);
-            addTypeBtn.dataset.listening = 'true';
         }
 
         // 6. Bind Year Change for Chart
@@ -224,8 +178,76 @@ app.views['dashboard'] = {
         }
     },
 
-    openCreateModal: () => {
+    bindModalEvents: () => {
+        // Bind Close Modal Buttons
+        const closeModalBtn = document.getElementById('btn-close-project-modal');
+        if (closeModalBtn && !closeModalBtn.dataset.listening) {
+            closeModalBtn.addEventListener('click', () => {
+                app.views['dashboard'].closeModal();
+            });
+            closeModalBtn.dataset.listening = 'true';
+        }
+
+        const cancelModalBtn = document.getElementById('btn-cancel-project-modal');
+        if (cancelModalBtn && !cancelModalBtn.dataset.listening) {
+            cancelModalBtn.addEventListener('click', () => {
+                app.views['dashboard'].closeModal();
+            });
+            cancelModalBtn.dataset.listening = 'true';
+        }
+
+        // Close on Backdrop Click
+        const modalOverlay = document.getElementById('create-project-modal');
+        if (modalOverlay && !modalOverlay.dataset.listening) {
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) {
+                    app.views['dashboard'].closeModal();
+                }
+            });
+            modalOverlay.dataset.listening = 'true';
+        }
+
+        // Close on ESC key
+        if (!document.body.dataset.escModalBound) {
+            document.addEventListener('keydown', (e) => {
+                const overlay = document.getElementById('create-project-modal');
+                if (e.key === 'Escape' && overlay && overlay.classList.contains('active')) {
+                    app.views['dashboard'].closeModal();
+                }
+            });
+            document.body.dataset.escModalBound = 'true';
+        }
+
+        // Bind Create / Edit Project Form Submit
+        const form = document.getElementById('create-project-form');
+        if (form && !form.dataset.listening) {
+            form.addEventListener('submit', app.views['dashboard'].handleFormSubmit);
+            form.dataset.listening = 'true';
+        }
+
+        // Bind Add Project Type Tag Button
+        const addTypeBtn = document.getElementById('add-type-btn');
+        if (addTypeBtn && !addTypeBtn.dataset.listening) {
+            addTypeBtn.addEventListener('click', app.views['dashboard'].handleAddType);
+            addTypeBtn.dataset.listening = 'true';
+        }
+
+        // Project Billing Type toggle in modal
+        const projBillingSelect = document.getElementById('proj-billing-type');
+        if (projBillingSelect && !projBillingSelect.dataset.listening) {
+            projBillingSelect.addEventListener('change', () => {
+                app.views['dashboard'].syncBillingFormUI();
+            });
+            projBillingSelect.dataset.listening = 'true';
+        }
+    },
+
+    openCreateModal: async () => {
         app.views['dashboard'].editingId = null;
+        app.views['dashboard'].bindModalEvents();
+        await app.views['dashboard'].loadProjectTypes();
+        await app.views['dashboard'].populateClientsDatalist();
+
         const modal = document.getElementById('create-project-modal');
         const form = document.getElementById('create-project-form');
         const titleEl = document.getElementById('project-modal-title');
@@ -234,7 +256,7 @@ app.views['dashboard'] = {
         if (form) form.reset();
         if (titleEl) titleEl.innerText = '建立新專案';
         if (submitBtn) {
-            submitBtn.innerHTML = `<span>+</span> 建立專案`;
+            submitBtn.innerHTML = `${Icons.render('plus', { size: 14 })} 建立專案`;
             submitBtn.style.backgroundColor = '';
         }
 
@@ -736,10 +758,11 @@ app.views['dashboard'] = {
 
             const submitBtn = document.getElementById('btn-submit-project-modal');
             if (submitBtn) {
-                submitBtn.innerHTML = '<span>💾</span> 儲存變更';
+                submitBtn.innerHTML = `${Icons.render('save', { size: 14 })} 儲存變更`;
                 submitBtn.style.backgroundColor = 'var(--accent-primary)';
             }
 
+            app.views['dashboard'].bindModalEvents();
             const modal = document.getElementById('create-project-modal');
             if (modal) modal.classList.add('active');
 
