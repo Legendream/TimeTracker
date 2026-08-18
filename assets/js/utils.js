@@ -243,10 +243,10 @@ const Utils = {
     DEFAULT_HOURLY_RATE: 0,
 
     /**
-     * 從專案與收入資料庫中動態提取所有不重複的客戶/發款組織名稱
+     * 從專案與收入資料庫中動態提取所有不重複的合作單位/客戶名稱
      * @param {Array} projects 
      * @param {Array} revenues 
-     * @returns {Array<string>} 排序後的客戶名稱清單
+     * @returns {Array<string>} 排序後的合作單位/客戶名稱清單
      */
     extractUniqueClients: (projects = [], revenues = []) => {
         const clientSet = new Set();
@@ -369,17 +369,17 @@ const Utils = {
         sortedClientNames.forEach(clientName => {
             const list = clientGroups[clientName];
             const boldClient = Utils.toBoldUnicode(clientName);
-            html += `<optgroup label="🏢 ══【 ${Utils.escapeHtml(boldClient)} 】(${list.length} 個專案) ══">${list.map(p => makeOption(p, false)).join('')}</optgroup>`;
+            html += `<optgroup label="══【 ${Utils.escapeHtml(boldClient)} 】(${list.length} 個專案) ══">${list.map(p => makeOption(p, false)).join('')}</optgroup>`;
         });
 
         if (unassignedCommercial.length > 0) {
-            html += `<optgroup label="💼 ══【 商業委託專案 】(${unassignedCommercial.length} 個專案) ══">${unassignedCommercial.map(p => makeOption(p, false)).join('')}</optgroup>`;
+            html += `<optgroup label="══【 商業委託專案 】(${unassignedCommercial.length} 個專案) ══">${unassignedCommercial.map(p => makeOption(p, false)).join('')}</optgroup>`;
         }
         if (nonProfitAndSelf.length > 0) {
-            html += `<optgroup label="🌱 ══【 公益奉獻 / 探索 / 自修創作 】(${nonProfitAndSelf.length} 個專案) ══">${nonProfitAndSelf.map(p => makeOption(p, true)).join('')}</optgroup>`;
+            html += `<optgroup label="══【 公益奉獻 / 探索 / 自修創作 】(${nonProfitAndSelf.length} 個專案) ══">${nonProfitAndSelf.map(p => makeOption(p, true)).join('')}</optgroup>`;
         }
         if (closedProjects.length > 0) {
-            html += `<optgroup label="📁 ══【 已結案歷史專案 】(${closedProjects.length} 個專案) ══">${closedProjects.map(p => makeOption(p, true)).join('')}</optgroup>`;
+            html += `<optgroup label="══【 已結案歷史專案 】(${closedProjects.length} 個專案) ══">${closedProjects.map(p => makeOption(p, true)).join('')}</optgroup>`;
         }
 
         return html;
