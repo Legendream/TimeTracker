@@ -220,7 +220,7 @@ app.views['annual-goals'] = {
             }
         });
 
-        // 8. Bind Goal Form
+        // 8. Bind Goal Form & Reset Button
         const goalForm = document.getElementById('annual-goal-form');
         if (goalForm && !goalForm.dataset.listening) {
             goalForm.onsubmit = (e) => {
@@ -229,6 +229,16 @@ app.views['annual-goals'] = {
                 app.views['annual-goals'].saveGoal(selectedYear);
             };
             goalForm.dataset.listening = 'true';
+        }
+
+        const resetGoalBtn = document.getElementById('btn-reset-annual-goal');
+        if (resetGoalBtn && !resetGoalBtn.dataset.listening) {
+            resetGoalBtn.addEventListener('click', () => {
+                const yearSelect = document.getElementById('annual-goals-year-select');
+                const selectedYear = yearSelect ? yearSelect.value : new Date().getFullYear();
+                app.views['annual-goals'].resetGoal(selectedYear);
+            });
+            resetGoalBtn.dataset.listening = 'true';
         }
 
         // 9. Bind Revenue Form
@@ -432,6 +442,25 @@ app.views['annual-goals'] = {
         }
     },
 
+    resetGoal: async (year) => {
+        if (!confirm(`確定要清除 ${year} 年度的營收目標設定嗎？`)) return;
+        try {
+            await db.delete('annualGoals', String(year));
+            app.views['annual-goals'].currentYearGoal = 0;
+            const input = document.getElementById('annual-goal-input');
+            if (input) input.value = '';
+
+            const totalRevenue = app.views['annual-goals'].currentYearRevenue
+                .reduce((sum, r) => sum + Number(r.amount || 0), 0);
+            app.views['annual-goals'].updateProgressUI(year, 0, totalRevenue);
+            app.views['annual-goals'].renderOrgVisualizations(year, app.views['annual-goals'].currentYearRevenue, totalRevenue, 0);
+            alert(`已清除 ${year} 年度目標設定。`);
+        } catch (e) {
+            console.error("Error resetting goal:", e);
+            alert("清除目標失敗：" + e.message);
+        }
+    },
+
     updateProgressUI: (year, goalAmount, totalRevenue) => {
         const gap = Math.max(0, goalAmount - totalRevenue);
 
@@ -444,14 +473,16 @@ app.views['annual-goals'] = {
 
         // 1. Goal Progress Container UI
         const goalTotalEl = document.getElementById('goal-total');
-        if (goalTotalEl) goalTotalEl.innerText = `$${goalAmount.toLocaleString()}`;
+        if (goalTotalEl) goalTotalEl.innerText = goalAmount > 0 ? `$${goalAmount.toLocaleString()}` : '未設定';
 
         const currentTotalEl = document.getElementById('current-total');
         if (currentTotalEl) currentTotalEl.innerText = `$${totalRevenue.toLocaleString()}`;
 
         const goalGapEl = document.getElementById('goal-gap');
         if (goalGapEl) {
-            if (gap === 0 && goalAmount > 0) {
+            if (goalAmount <= 0) {
+                goalGapEl.innerHTML = `<span style="color: var(--text-muted);">尚無目標</span>`;
+            } else if (gap === 0) {
                 goalGapEl.innerHTML = `<span style="color: var(--success);">已達標！🎉</span>`;
             } else {
                 goalGapEl.innerText = `$${gap.toLocaleString()}`;
@@ -459,18 +490,18 @@ app.views['annual-goals'] = {
         }
 
         const progressPercentEl = document.getElementById('progress-percentage');
-        if (progressPercentEl) progressPercentEl.innerText = `${percent}%`;
+        if (progressPercentEl) progressPercentEl.innerText = goalAmount > 0 ? `${percent}%` : '-';
 
         const progressBarEl = document.getElementById('goal-progress-bar');
-        if (progressBarEl) progressBarEl.style.width = `${Math.min(100, percent)}%`;
+        if (progressBarEl) progressBarEl.style.width = goalAmount > 0 ? `${Math.min(100, percent)}%` : (totalRevenue > 0 ? '100%' : '0%');
 
         // 2. Top KPI Cards UI
         const kpiGoalEl = document.getElementById('kpi-goal-amount');
-        if (kpiGoalEl) kpiGoalEl.innerText = `$${goalAmount.toLocaleString()}`;
+        if (kpiGoalEl) kpiGoalEl.innerText = goalAmount > 0 ? `$${goalAmount.toLocaleString()}` : '未設定';
 
         const kpiGoalGapSub = document.getElementById('kpi-goal-gap-sub');
         if (kpiGoalGapSub) {
-            kpiGoalGapSub.innerText = gap > 0 ? `尚差 $${gap.toLocaleString()}` : (goalAmount > 0 ? '已達標' : '未設定目標');
+            kpiGoalGapSub.innerText = goalAmount > 0 ? (gap > 0 ? `尚差 $${gap.toLocaleString()}` : '已達標') : '尚未設定年度目標';
         }
 
         const kpiTotalEl = document.getElementById('kpi-total-revenue');

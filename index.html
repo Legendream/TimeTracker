@@ -282,7 +282,9 @@
                         <div id="project-imported-entries">
                             <div
                                 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                                <h3>工時紀錄</h3>
+                                <h3 style="margin-bottom: 0; display: flex; align-items: center; gap: 0.4rem;">
+                                    <i data-icon="clock" data-size="16"></i> 工時紀錄流水帳
+                                </h3>
                             </div>
                             
                             <!-- 篩選與統計 -->
@@ -306,8 +308,25 @@
                             </div>
                             
                             <div id="imported-entries-list" class="card"
-                                style="color: var(--text-secondary); text-align: center; padding: 2rem; max-height: 300px; overflow-y: auto;">
+                                style="color: var(--text-secondary); text-align: center; padding: 2rem; max-height: 380px; overflow-y: auto;">
                                 請選擇專案以查看資料
+                            </div>
+                        </div>
+
+                        <!-- 6. Project Revenue Streams -->
+                        <div id="project-revenue-section">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h3 style="margin-bottom: 0; display: flex; align-items: center; gap: 0.4rem;">
+                                    <i data-icon="credit-card" data-size="16"></i> 款項入帳與金流紀錄
+                                </h3>
+                                <button type="button" class="btn btn-secondary" id="btn-project-add-revenue" style="padding: 4px 10px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <i data-icon="plus" data-size="12"></i> 登記收款
+                                </button>
+                            </div>
+                            
+                            <div id="project-revenues-list" class="card"
+                                style="color: var(--text-secondary); padding: 1rem; max-height: 460px; overflow-y: auto;">
+                                請選擇專案以查看收款紀錄
                             </div>
                         </div>
                     </div>
@@ -497,10 +516,11 @@
                         <form id="annual-goal-form">
                             <div class="form-group" style="margin-bottom: 0;">
                                 <label style="font-weight: 500;">設定 / 調整年度目標金額 (元)</label>
-                                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
                                     <input type="number" id="annual-goal-input" placeholder="例如：1000000" min="0"
                                         style="font-size: 1.05rem; flex: 1;">
                                     <button type="submit" id="save-goal-btn" class="btn btn-primary" style="white-space: nowrap; padding: 10px 18px;">儲存目標</button>
+                                    <button type="button" id="btn-reset-annual-goal" class="btn btn-secondary" style="white-space: nowrap; padding: 10px 14px; color: var(--text-muted);" title="清除此年度目標設定">清除</button>
                                 </div>
                             </div>
                         </form>
