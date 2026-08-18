@@ -336,7 +336,7 @@ const Utils = {
                     clean = clean.substring(clientBracket.length).trim();
                 }
             }
-            // Strip generic bracket if it matches part of client name e.g. [千綺]
+            // Strip generic bracket if it matches part of client name e.g. [ClientName]
             const match = clean.match(/^\[([^\]]+)\]\s*(.*)$/);
             if (match && client && (client.includes(match[1]) || match[1].includes(client))) {
                 clean = match[2];
