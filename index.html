@@ -541,8 +541,8 @@
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                                 <div class="form-group">
-                                    <label>發款單位 / 客戶組織</label>
-                                    <input type="text" id="revenue-org" list="org-suggestions" placeholder="例如：委託客戶、合作單位、機構法人..." required autocomplete="off">
+                                    <label>合作單位 / 客戶組織</label>
+                                    <input type="text" id="revenue-org" list="org-suggestions" placeholder="例如：g0v 揪松團、合作單位、委託客戶..." required autocomplete="off">
                                     <datalist id="org-suggestions"></datalist>
                                 </div>
                                 <div class="form-group">
@@ -580,7 +580,7 @@
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                                 <div class="form-group">
-                                    <label>發款客戶組織</label>
+                                    <label>合作單位 / 客戶組織</label>
                                     <select id="split-client-select" required style="font-size: 0.95rem;">
                                         <!-- Populated via JS -->
                                     </select>
@@ -637,7 +637,7 @@
                                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0;">掌握今年主要收入來源客戶，點擊客戶可直接查看其專案與金流明細</p>
                             </div>
                             <div id="org-rank-summary-badge" style="font-size: 0.85rem; color: var(--text-muted); background: var(--bg-primary); padding: 4px 10px; border-radius: var(--radius-full);">
-                                共 0 個發款單位
+                                共 0 個合作單位
                             </div>
                         </div>
 
@@ -744,7 +744,7 @@
                     <!-- Filter Controls -->
                     <div class="grid-3" style="gap: 1rem; margin-bottom: 1.25rem; background: var(--bg-tertiary); padding: 1rem; border-radius: var(--radius-md); align-items: flex-end;">
                         <div class="form-group" style="margin-bottom: 0;">
-                            <label for="billing-client-select" style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem;">發款客戶 / 單位</label>
+                            <label for="billing-client-select" style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem;">合作單位 / 客戶</label>
                             <select id="billing-client-select" style="padding: 0.55rem; font-size: 0.95rem; width: 100%;">
                                 <option value="">載入客戶清單中...</option>
                             </select>
@@ -761,7 +761,7 @@
 
                     <!-- Billing Statement Live Output -->
                     <div id="billing-statement-container" style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
-                        <p style="color: var(--text-muted); text-align: center; padding: 1.5rem 0;">請選擇發款客戶與月份以載入對帳單據</p>
+                        <p style="color: var(--text-muted); text-align: center; padding: 1.5rem 0;">請選擇合作單位與月份以載入對帳單據</p>
                     </div>
                 </div>
 
@@ -832,7 +832,7 @@
         <div class="modal-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
                 <h3 id="project-modal-title" style="margin-bottom: 0; font-size: 1.2rem;">建立新專案</h3>
-                <button type="button" class="btn-modal-close" id="btn-close-project-modal" title="關閉視窗">✕</button>
+                <button type="button" class="btn-modal-close" id="btn-close-project-modal" onclick="if(window.app?.views?.['dashboard']?.closeModal) window.app.views['dashboard'].closeModal(); else document.getElementById('create-project-modal')?.classList.remove('active');" title="關閉視窗">✕</button>
             </div>
             <form id="create-project-form">
                 <div class="grid-2" style="gap: 0.75rem;">
@@ -855,8 +855,8 @@
                     <input type="text" id="proj-name" placeholder="例如：g0v 指引, 委託案..." required>
                 </div>
                 <div class="form-group">
-                    <label for="proj-client">發款單位 / 客戶組織</label>
-                    <input type="text" id="proj-client" list="clients-master-datalist" placeholder="例如：委託客戶名稱、發包單位..." autocomplete="off">
+                    <label for="proj-client">合作單位 / 客戶組織</label>
+                    <input type="text" id="proj-client" list="clients-master-datalist" placeholder="例如：g0v 揪松團、合作夥伴、委託客戶..." autocomplete="off">
                     <datalist id="clients-master-datalist"></datalist>
                 </div>
                 <div class="grid-2" style="gap: 0.75rem;">
@@ -917,9 +917,9 @@
                 </div>
 
                 <div style="text-align: right; display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
-                    <button type="button" class="btn btn-secondary" id="btn-cancel-project-modal">取消</button>
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-project-modal" onclick="if(window.app?.views?.['dashboard']?.closeModal) window.app.views['dashboard'].closeModal(); else document.getElementById('create-project-modal')?.classList.remove('active');">取消</button>
                     <button type="submit" class="btn btn-primary" id="btn-submit-project-modal">
-                        <span>+</span> 建立專案
+                        <i data-icon="plus" data-size="14"></i> 建立專案
                     </button>
                 </div>
             </form>
@@ -1086,7 +1086,7 @@
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
                     <button type="button" class="btn btn-secondary" onclick="document.getElementById('project-subitems-modal').classList.remove('active')">取消</button>
-                    <button type="submit" class="btn btn-primary">💾 儲存並更新專案</button>
+                    <button type="submit" class="btn btn-primary"><i data-icon="save" data-size="14"></i> 儲存並更新專案</button>
                 </div>
             </form>
         </div>
@@ -1166,10 +1166,10 @@
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; pt: 0.75rem; border-top: 1px solid var(--border-color);">
-                <button type="button" class="btn btn-secondary" id="btn-reset-taxonomy-default" style="font-size: 0.82rem; color: var(--text-muted);">🔄 恢復系統預設字典</button>
+                <button type="button" class="btn btn-secondary" id="btn-reset-taxonomy-default" style="font-size: 0.82rem; color: var(--text-muted);"><i data-icon="refresh" data-size="13"></i> 恢復系統預設字典</button>
                 <div style="display: flex; gap: 0.75rem;">
                     <button type="button" class="btn btn-secondary" onclick="document.getElementById('taxonomy-settings-modal').classList.remove('active')">取消</button>
-                    <button type="button" class="btn btn-primary" id="btn-save-taxonomy-settings">💾 儲存並套用全站</button>
+                    <button type="button" class="btn btn-primary" id="btn-save-taxonomy-settings"><i data-icon="save" data-size="14"></i> 儲存並套用全站</button>
                 </div>
             </div>
         </div>

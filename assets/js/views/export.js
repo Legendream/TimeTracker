@@ -211,7 +211,7 @@ app.views['export'] = {
         const rate = Number(document.getElementById('billing-hourly-rate')?.value) || Utils.DEFAULT_HOURLY_RATE;
 
         if (!client || !month) {
-            container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1.5rem 0;">請選擇發款客戶與月份以載入對帳單據</p>';
+            container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1.5rem 0;">請選擇合作單位與月份以載入對帳單據</p>';
             app.views['export'].currentStatement = null;
             return;
         }
@@ -275,7 +275,7 @@ app.views['export'] = {
             if (monthlyEntries.length === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 2rem 1rem; color: #b45309;">
-                        <span style="font-size: 1.5rem;">⚠️</span><br>
+                        <div style="margin-bottom: 0.5rem; display: flex; justify-content: center;">${Icons.render('alertCircle', { size: 28 })}</div>
                         <strong>「${Utils.escapeHtml(client)}」在 ${month} 尚無任何工時紀錄。</strong><br>
                         <span style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; display: inline-block;">
                             若有該月份的工作請至「當日計時」或各專案頁面補登工時。
@@ -290,7 +290,7 @@ app.views['export'] = {
                 <!-- Summary Header -->
                 <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0, 102, 204, 0.05); border: 1px solid rgba(0, 102, 204, 0.15); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
                     <div>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary);">發款單位：<strong>${Utils.escapeHtml(client)}</strong> ｜ 結算月份：<strong>${month}</strong></div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">合作單位：<strong>${Utils.escapeHtml(client)}</strong> ｜ 結算月份：<strong>${month}</strong></div>
                         <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin-top: 2px;">
                             當月累計：<span style="color: var(--accent-primary);">${totalHours.toFixed(1)} h</span>
                             <span style="font-size: 0.85rem; font-weight: normal; color: var(--text-muted);">（涵蓋 ${activeProjectsList.length} 個專案）</span>

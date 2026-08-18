@@ -615,12 +615,12 @@ app.views['annual-goals'] = {
         if (revenueList.length === 0) {
             container.innerHTML = `
                 <div style="text-align: center; color: var(--text-muted); padding: 2.5rem 1rem;">
-                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🏢</div>
-                    <p style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${year} 年度尚無發款單位收入紀錄</p>
+                    <div style="color: var(--text-muted); margin-bottom: 0.5rem;">${Icons.render('building', { size: 36 })}</div>
+                    <p style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${year} 年度尚無合作單位收入紀錄</p>
                     <p style="font-size: 0.85rem;">可使用上方表單登記第一筆收入</p>
                 </div>
             `;
-            if (badgeEl) badgeEl.innerText = '共 0 個發款單位';
+            if (badgeEl) badgeEl.innerText = '共 0 個合作單位';
             return;
         }
 
@@ -1353,7 +1353,7 @@ app.views['annual-goals'] = {
                 btnSplit.style.background = 'var(--accent-primary)';
                 btnSplit.style.color = '#ffffff';
             }
-            if (descEl) descEl.innerText = '選擇客戶組織與月份，輸入當月發放總薪資，系統自動按各專案工時佔比一秒拆帳！';
+            if (descEl) descEl.innerText = '選擇合作單位與月份，輸入當月發放總薪資，系統自動按各專案工時佔比一秒拆帳！';
             app.views['annual-goals'].populateSplitClientsDropdown();
             app.views['annual-goals'].updateSalarySplitPreview();
         } else {
@@ -1574,7 +1574,7 @@ app.views['annual-goals'] = {
                     organization: client,
                     amount: d.amount,
                     item: `${d.project.name} ${month} 時薪結算 (${d.hours.toFixed(1)}h)`,
-                    note: `由客戶 ${client} 月薪 $${totalAmount.toLocaleString()} 自動拆帳（當月投入 ${d.hours.toFixed(1)}h / 總計 ${totalHours.toFixed(1)}h · 時薪 $${effectiveRate.toLocaleString()}）`,
+                    note: `由合作單位 ${client} 月薪 $${totalAmount.toLocaleString()} 自動拆帳（當月投入 ${d.hours.toFixed(1)}h / 總計 ${totalHours.toFixed(1)}h · 時薪 $${effectiveRate.toLocaleString()}）`,
                     type: 'salary_split',
                     createdAt: new Date().toISOString()
                 };
