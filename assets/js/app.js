@@ -310,6 +310,9 @@ const app = {
             await Promise.race([dbInitPromise, timeoutPromise]);
 
             app.router.init();
+            if (app.views['dashboard'] && typeof app.views['dashboard'].bindModalEvents === 'function') {
+                app.views['dashboard'].bindModalEvents();
+            }
             if (typeof Icons !== 'undefined' && typeof Icons.replace === 'function') {
                 Icons.replace();
             }
