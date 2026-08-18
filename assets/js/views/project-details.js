@@ -491,7 +491,7 @@ app.views['project-details'] = {
             const lifetimeReceived = projectRevenues.reduce((sum, r) => sum + Number(r.amount || 0), 0);
             const budget = Number(project.revenue || 0);
             const unpaid = Math.max(0, budget - lifetimeReceived);
-            const hourlyRate = Number(project.hourlyRate) || Utils.DEFAULT_HOURLY_RATE;
+            const hourlyRate = (project.hourlyRate !== undefined && project.hourlyRate !== null && project.hourlyRate !== '' && !isNaN(Number(project.hourlyRate))) ? Number(project.hourlyRate) : Utils.DEFAULT_HOURLY_RATE;
 
             const displayAmount = isHourly ? Math.round(totalHours * hourlyRate) : lifetimeReceived;
             const displayAmountLabel = isHourly ? '累計產值' : '專案已收';

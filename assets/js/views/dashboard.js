@@ -654,8 +654,8 @@ app.views['dashboard'] = {
         const category = document.getElementById('proj-category') ? document.getElementById('proj-category').value : 'commercial';
         const status = document.getElementById('proj-status') ? document.getElementById('proj-status').value : 'active';
         const billingType = document.getElementById('proj-billing-type') ? document.getElementById('proj-billing-type').value : 'hourly';
-        const hourlyRateStr = document.getElementById('proj-hourly-rate') ? document.getElementById('proj-hourly-rate').value : '';
-        const hourlyRate = hourlyRateStr !== '' && !isNaN(Number(hourlyRateStr)) ? Number(hourlyRateStr) : Utils.DEFAULT_HOURLY_RATE;
+        const hourlyRateStr = document.getElementById('proj-hourly-rate') ? document.getElementById('proj-hourly-rate').value.trim() : '';
+        const hourlyRate = (hourlyRateStr !== '' && !isNaN(Number(hourlyRateStr))) ? Number(hourlyRateStr) : Utils.DEFAULT_HOURLY_RATE;
 
         const types = Array.from(document.querySelectorAll('input[name="proj-type"]:checked'))
             .map(cb => cb.value);
@@ -700,6 +700,14 @@ app.views['dashboard'] = {
             await app.views['dashboard'].populateClientsDatalist();
             await app.views['dashboard'].renderProjects();
 
+            // Refresh project dropdowns across views (Timer, Project Details, Export)
+            if (app.views['timer'] && app.views['timer'].populateProjectDropdown) {
+                await app.views['timer'].populateProjectDropdown();
+            }
+            if (app.views['project-details'] && app.views['project-details'].populateProjectDropdown) {
+                await app.views['project-details'].populateProjectDropdown();
+            }
+
             // If user is currently in project details view for this project, reload details
             if (savedPid && app.views['project-details'] && app.views['project-details'].currentProjectId === savedPid) {
                 await app.views['project-details'].loadProjectDetails(savedPid);
@@ -737,7 +745,7 @@ app.views['dashboard'] = {
                 document.getElementById('proj-billing-type').value = project.billingType || 'hourly';
             }
             if (document.getElementById('proj-hourly-rate')) {
-                document.getElementById('proj-hourly-rate').value = project.hourlyRate || Utils.DEFAULT_HOURLY_RATE;
+                document.getElementById('proj-hourly-rate').value = (project.hourlyRate !== undefined && project.hourlyRate !== null && project.hourlyRate !== '') ? project.hourlyRate : Utils.DEFAULT_HOURLY_RATE;
             }
             if (document.getElementById('proj-subitems')) {
                 document.getElementById('proj-subitems').value = (project.subItems || []).join(', ');
@@ -908,7 +916,7 @@ app.views['dashboard'] = {
                 const hours = hoursMap[p.id] || 0;
                 const isHourly = p.billingType === 'hourly';
                 const isFixed = p.billingType === 'fixed';
-                const rate = Number(p.hourlyRate) || Utils.DEFAULT_HOURLY_RATE;
+                const rate = (p.hourlyRate !== undefined && p.hourlyRate !== null && p.hourlyRate !== '' && !isNaN(Number(p.hourlyRate))) ? Number(p.hourlyRate) : Utils.DEFAULT_HOURLY_RATE;
                 
                 // For hourly projects, estimated value is hours * hourlyRate
                 const hourlyVal = Math.round(hours * rate);

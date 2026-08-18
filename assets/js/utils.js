@@ -347,7 +347,7 @@ const Utils = {
         const makeOption = (p, showClientPrefix = false) => {
             const cleanName = cleanProjectDisplayName(p.name, p.client);
             const clientStr = (showClientPrefix && p.client) ? `[${p.client}] ` : '';
-            const rate = Number(p.hourlyRate) || Utils.DEFAULT_HOURLY_RATE;
+            const rate = (p.hourlyRate !== undefined && p.hourlyRate !== null && p.hourlyRate !== '' && !isNaN(Number(p.hourlyRate))) ? Number(p.hourlyRate) : Utils.DEFAULT_HOURLY_RATE;
             const billingBadge = p.billingType === 'fixed' ? ' (固定)' : ` ($${rate}/h)`;
             const closedSuffix = p.status === 'closed' ? ' [已結案]' : '';
             return `<option value="${p.id}">&nbsp;&nbsp;↳ ${Utils.escapeHtml(clientStr + cleanName + billingBadge + closedSuffix)}</option>`;
@@ -399,7 +399,7 @@ const Utils = {
 
         const isHourly = project.billingType === 'hourly';
         const isFixed = project.billingType === 'fixed';
-        const rate = Number(project.hourlyRate) || defaultRate;
+        const rate = (project.hourlyRate !== undefined && project.hourlyRate !== null && project.hourlyRate !== '' && !isNaN(Number(project.hourlyRate))) ? Number(project.hourlyRate) : defaultRate;
 
         const estimatedValue = isHourly ? Math.round(hours * rate) : totalReceived;
         const unpaid = isFixed ? Math.max(0, budget - totalReceived) : 0;
