@@ -614,10 +614,37 @@ app.views['dashboard'] = {
         if (!container) return;
 
         container.innerHTML = types.map(type => `
-            <label style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; user-select: none; font-size: 0.85rem;">
-                <input type="checkbox" name="proj-type" value="${type}" style="width: auto;"> ${type}
-            </label>
+            <div class="project-type-chip" style="display: inline-flex; align-items: center; gap: 0.35rem; background: var(--bg-tertiary); padding: 3px 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-size: 0.85rem;">
+                <label style="display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; user-select: none; margin: 0;">
+                    <input type="checkbox" name="proj-type" value="${Utils.escapeHtml(type)}" style="width: auto; margin: 0;">
+                    <span>${Utils.escapeHtml(type)}</span>
+                </label>
+                <button type="button" class="btn-delete-proj-type" data-type="${Utils.escapeHtml(type)}" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0 2px; font-size: 0.75rem; line-height: 1;" title="刪除此標籤">✕</button>
+            </div>
         `).join('');
+
+        container.querySelectorAll('.btn-delete-proj-type').forEach(btn => {
+            btn.onclick = async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const typeToDelete = btn.dataset.type;
+                await app.views['dashboard'].handleDeleteType(typeToDelete);
+            };
+        });
+    },
+
+    handleDeleteType: async (typeToDelete) => {
+        if (!confirm(`確定要從標籤選單中移除標籤【${typeToDelete}】嗎？`)) return;
+        try {
+            let typesSetting = await db.get('settings', 'projectTypes');
+            let types = typesSetting ? typesSetting.value : ['研究', 'PM', '寫作', '顧問', '課程'];
+            types = types.filter(t => t !== typeToDelete);
+            await db.put('settings', { key: 'projectTypes', value: types });
+            app.views['dashboard'].renderProjectTypes(types);
+        } catch (e) {
+            console.error("Error deleting project type", e);
+            alert("刪除標籤失敗");
+        }
     },
 
     handleAddType: async () => {
@@ -781,15 +808,63 @@ app.views['dashboard'] = {
 
     executeDelete: async (id) => {
         try {
+            const project = await db.get('projects', id);
+            if (!project) return;
+
+            const allEntries = await db.getAll('entries');
+            const projectEntries = allEntries.filter(e => Number(e.projectId) === Number(id));
+            const totalHours = projectEntries.reduce((sum, e) => sum + Number(e.hours || 0), 0);
+
+            const allRevenues = await db.getAll('manualRevenue');
+            const projectRevenues = allRevenues.filter(r => Number(r.projectId) === Number(id));
+            const totalAmount = projectRevenues.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+
+            let confirmMsg = `確定要刪除專案【${project.name}】嗎？此動作無法復原。\n\n`;
+            if (projectEntries.length > 0 || projectRevenues.length > 0) {
+                confirmMsg += `⚠️ 關聯數據盤點：\n`;
+                if (projectEntries.length > 0) confirmMsg += `• 工時紀錄：共 ${projectEntries.length} 筆（合計 ${totalHours.toFixed(1)} 小時）\n`;
+                if (projectRevenues.length > 0) confirmMsg += `• 收款紀錄：共 ${projectRevenues.length} 筆（合計 $${totalAmount.toLocaleString()} 元）\n`;
+                confirmMsg += `\n確定要連帶徹底清除這些關聯紀錄，避免殘留孤兒數據嗎？`;
+            }
+
+            if (!confirm(confirmMsg)) return;
+
+            // Cascade delete related entries
+            for (const entry of projectEntries) {
+                await db.delete('entries', entry.id);
+            }
+            // Cascade delete related revenues
+            for (const rev of projectRevenues) {
+                await db.delete('manualRevenue', rev.id);
+            }
+            // Delete project
             await db.delete('projects', id);
+
             if (app.views['dashboard'].editingId === id) {
                 app.views['dashboard'].closeModal();
             }
             app.views['dashboard'].deletingId = null;
+
             await app.views['dashboard'].renderProjects();
+            await app.views['dashboard'].populateClientsDatalist();
+
+            // Refresh timer & project details dropdowns
+            if (app.views['timer'] && app.views['timer'].populateProjectDropdown) {
+                await app.views['timer'].populateProjectDropdown();
+            }
+            if (app.views['project-details'] && app.views['project-details'].populateProjectDropdown) {
+                await app.views['project-details'].populateProjectDropdown();
+            }
+
+            // If user was on project details view, navigate back to dashboard
+            if (window.location.hash.startsWith('#project-details')) {
+                window.location.hash = 'dashboard';
+            }
+
+            alert(`專案【${project.name}】及相關關聯資料已成功刪除。`);
         } catch (e) {
             console.error("Delete error", e);
-            alert("刪除失敗");
+            alert("刪除失敗：" + e.message);
         }
     },
 

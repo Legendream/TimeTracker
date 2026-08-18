@@ -527,8 +527,17 @@ app.views['project-details'] = {
                             <option value="closed" ${project.status === 'closed' ? 'selected' : ''}>已結案</option>
                         </select>
 
+                        <button type="button" class="btn btn-primary" id="details-btn-log-time" style="padding: 4px 10px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem;" title="直接為此專案補登工時">
+                            ${Icons.render('plus', { size: 12 })} 補登工時
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="details-btn-add-revenue" style="padding: 4px 10px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem;" title="直接為此專案登記收款">
+                            ${Icons.render('dollarSign', { size: 12 })} 登記收款
+                        </button>
                         <button type="button" class="btn btn-secondary" id="details-btn-edit-full" style="padding: 4px 10px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem;" title="編輯專案完整資訊（名稱、客戶、標籤、預算等）">
-                            ${Icons.render('edit', { size: 13 })} 編輯專案
+                            ${Icons.render('edit', { size: 12 })} 編輯專案
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="details-btn-delete-project" style="padding: 4px 8px; font-size: 0.8rem; color: var(--danger); border-color: rgba(239, 68, 68, 0.3); display: inline-flex; align-items: center; gap: 0.35rem;" title="刪除此專案與連帶資料">
+                            ${Icons.render('trash', { size: 12 })} 刪除
                         </button>
                     </div>
                 </div>
@@ -584,6 +593,9 @@ app.views['project-details'] = {
 
             // Load History
             app.views['project-details'].renderImportedEntries(projectId);
+
+            // Load Revenues
+            await app.views['project-details'].renderProjectRevenues(projectId);
 
             // Update manual entry subitem pills
             const manualPillsContainer = document.getElementById('manual-subitem-pills-container');
@@ -648,6 +660,39 @@ app.views['project-details'] = {
             if (editFullBtn) {
                 editFullBtn.onclick = () => {
                     app.views['dashboard'].startEdit(Number(projectId));
+                };
+            }
+
+            const logTimeBtn = document.getElementById('details-btn-log-time');
+            if (logTimeBtn) {
+                logTimeBtn.onclick = () => {
+                    const targetEl = document.getElementById('manual-entry-form');
+                    if (targetEl) {
+                        targetEl.scrollIntoView({ behavior: 'smooth' });
+                        const hoursInput = document.getElementById('manual-hours-part');
+                        if (hoursInput) hoursInput.focus();
+                    }
+                };
+            }
+
+            const addRevBtn = document.getElementById('details-btn-add-revenue');
+            if (addRevBtn) {
+                addRevBtn.onclick = () => {
+                    app.views['project-details'].openQuickRevenueModal(project);
+                };
+            }
+
+            const projectAddRevBtn = document.getElementById('btn-project-add-revenue');
+            if (projectAddRevBtn) {
+                projectAddRevBtn.onclick = () => {
+                    app.views['project-details'].openQuickRevenueModal(project);
+                };
+            }
+
+            const deleteProjectBtn = document.getElementById('details-btn-delete-project');
+            if (deleteProjectBtn) {
+                deleteProjectBtn.onclick = () => {
+                    app.views['dashboard'].executeDelete(Number(projectId));
                 };
             }
 
@@ -1377,5 +1422,103 @@ app.views['project-details'] = {
                 }
             }
         }
+    },
+
+    renderProjectRevenues: async (projectId) => {
+        const container = document.getElementById('project-revenues-list');
+        if (!container) return;
+
+        try {
+            const allRevenues = await db.getAll('manualRevenue');
+            const projectRevenues = allRevenues.filter(r => Number(r.projectId) === Number(projectId));
+
+            projectRevenues.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+            if (projectRevenues.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--text-muted); padding: 2rem 1rem;">
+                        <div style="margin-bottom: 0.5rem; display: flex; justify-content: center;">${Icons.render('creditCard', { size: 28 })}</div>
+                        <p style="margin-bottom: 0.75rem; font-size: 0.9rem;">此專案目前尚無入帳收款紀錄</p>
+                        <button type="button" class="btn btn-secondary" onclick="app.views['project-details'].openQuickRevenueModal()" style="font-size: 0.8rem; padding: 5px 12px; display: inline-flex; align-items: center; gap: 0.35rem;">
+                            ${Icons.render('plus', { size: 12 })} 登記第一筆收款
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const totalReceived = projectRevenues.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+
+            container.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); font-size: 0.85rem;">
+                    <span style="color: var(--text-secondary);">共 ${projectRevenues.length} 筆收款紀錄</span>
+                    <strong style="color: var(--success); font-size: 0.95rem;">累計入帳：$${totalReceived.toLocaleString()}</strong>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    ${projectRevenues.map(r => `
+                        <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="font-weight: 700; font-size: 0.88rem; color: var(--text-primary);">${Utils.escapeHtml(r.date)}</span>
+                                    <span style="font-size: 0.75rem; background: rgba(0, 102, 204, 0.1); color: var(--accent-primary); padding: 1px 6px; border-radius: 4px; font-weight: 600;">${Utils.escapeHtml(r.item || '款項')}</span>
+                                </div>
+                                ${r.note ? `<div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;">${Utils.escapeHtml(r.note)}</div>` : ''}
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <strong style="color: var(--success); font-size: 0.95rem;">+$${Number(r.amount || 0).toLocaleString()}</strong>
+                                <button type="button" class="btn btn-secondary btn-delete-project-revenue" data-id="${r.id}" style="padding: 2px 6px; font-size: 0.75rem; color: var(--danger); border-color: rgba(239, 68, 68, 0.3);" title="刪除此筆收款">✕</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            container.querySelectorAll('.btn-delete-project-revenue').forEach(btn => {
+                btn.onclick = async (e) => {
+                    e.stopPropagation();
+                    const revId = Number(btn.dataset.id);
+                    if (!confirm('確定要刪除這筆收款紀錄嗎？此操作無法復原。')) return;
+                    try {
+                        await db.delete('manualRevenue', revId);
+                        if (app.views['project-details'].currentProjectId) {
+                            await app.views['project-details'].loadProjectDetails(app.views['project-details'].currentProjectId);
+                        }
+                    } catch (err) {
+                        console.error('Delete revenue error:', err);
+                        alert('刪除失敗');
+                    }
+                };
+            });
+        } catch (err) {
+            console.error('Error rendering project revenues:', err);
+            container.innerHTML = '<p style="color: var(--danger);">載入收款紀錄失敗</p>';
+        }
+    },
+
+    openQuickRevenueModal: (projectArg) => {
+        const project = projectArg || app.views['project-details'].currentProject;
+        if (!project) return;
+
+        window.location.hash = 'annual-goals';
+        setTimeout(() => {
+            const projSelect = document.getElementById('revenue-project-select');
+            if (projSelect) {
+                projSelect.value = project.id;
+                projSelect.dispatchEvent(new Event('change'));
+            }
+            const orgInput = document.getElementById('revenue-org');
+            if (orgInput && project.client) {
+                orgInput.value = project.client;
+            }
+            const itemInput = document.getElementById('revenue-item');
+            if (itemInput) {
+                itemInput.value = `${project.name} 款項`;
+                itemInput.focus();
+            }
+            const dateInput = document.getElementById('revenue-date');
+            if (dateInput && !dateInput.value) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+            }
+        }, 150);
     }
 };
